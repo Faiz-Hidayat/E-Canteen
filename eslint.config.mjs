@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reference UI project (Vite prototype, not part of build)
+    "e-canteen-ref-ui/**",
   ]),
 ]);
 
