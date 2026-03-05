@@ -179,28 +179,36 @@ export function MenuCatalog({ menus }: MenuCatalogProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="overflow-hidden rounded-2xl border border-primary/10 bg-secondary/60 py-3"
+        className="relative overflow-hidden rounded-2xl border border-primary/10 bg-linear-to-r from-primary/10 via-secondary/60 to-primary/10 py-3"
       >
+        {/* Decorative gradient edges */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-linear-to-r from-white/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-linear-to-l from-white/80 to-transparent" />
+
         <div className="animate-marquee flex items-center whitespace-nowrap text-sm font-extrabold tracking-wide text-primary/80">
-          <div className="flex items-center gap-6 px-2">
-            <span>🕐 Istirahat 1: 09.30 — 10.00</span>
+          <div className="flex items-center gap-8 px-4">
+            <span>🔔 Pesan dari kelas, ambil pas istirahat tanpa antre!</span>
             <span className="text-lg">🍱</span>
-            <span>🕐 Istirahat 2: 12.00 — 12.30</span>
+            <span>🕐 Istirahat 1: 09.30 — 10.00 &bull; Istirahat 2: 12.00 — 12.30</span>
             <span className="text-lg">🍛</span>
-            <span>✨ Pesan dari kelas, ambil tanpa antre!</span>
-            <span className="text-lg">🏃</span>
-            <span>💡 Tahukah kamu? Makan pagi bikin fokus belajar!</span>
-            <span className="text-lg">🧠</span>
+            <span>💰 Top-up saldo langsung dari app, bayar lebih cepat!</span>
+            <span className="text-lg">⚡</span>
+            <span>🧠 Fun Fact: Sarapan bikin konsentrasi naik 20%!</span>
+            <span className="text-lg">📚</span>
+            <span>🎉 E-Canteen — jajan praktis, belajar fokus!</span>
+            <span className="text-lg">🚀</span>
           </div>
-          <div className="flex items-center gap-6 px-2">
-            <span>🕐 Istirahat 1: 09.30 — 10.00</span>
+          <div className="flex items-center gap-8 px-4" aria-hidden="true">
+            <span>🔔 Pesan dari kelas, ambil pas istirahat tanpa antre!</span>
             <span className="text-lg">🍱</span>
-            <span>🕐 Istirahat 2: 12.00 — 12.30</span>
+            <span>🕐 Istirahat 1: 09.30 — 10.00 &bull; Istirahat 2: 12.00 — 12.30</span>
             <span className="text-lg">🍛</span>
-            <span>✨ Pesan dari kelas, ambil tanpa antre!</span>
-            <span className="text-lg">🏃</span>
-            <span>💡 Tahukah kamu? Makan pagi bikin fokus belajar!</span>
-            <span className="text-lg">🧠</span>
+            <span>💰 Top-up saldo langsung dari app, bayar lebih cepat!</span>
+            <span className="text-lg">⚡</span>
+            <span>🧠 Fun Fact: Sarapan bikin konsentrasi naik 20%!</span>
+            <span className="text-lg">📚</span>
+            <span>🎉 E-Canteen — jajan praktis, belajar fokus!</span>
+            <span className="text-lg">🚀</span>
           </div>
         </div>
       </motion.div>

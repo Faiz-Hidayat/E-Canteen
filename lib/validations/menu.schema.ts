@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+const PhotoUrlSchema = z
+  .string()
+  .refine(
+    (value) => {
+      if (!value) return true;
+      if (value.startsWith("/")) return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "Format URL foto tidak valid." }
+  )
+  .optional()
+  .or(z.literal(""));
+
 // ── Create Menu Schema ──────────────────────────────────────
 
 export const CreateMenuSchema = z.object({
@@ -21,11 +39,7 @@ export const CreateMenuSchema = z.object({
     .max(50, "Kategori maksimal 50 karakter.")
     .optional()
     .or(z.literal("")),
-  photoUrl: z
-    .string()
-    .url("Format URL foto tidak valid.")
-    .optional()
-    .or(z.literal("")),
+  photoUrl: PhotoUrlSchema,
 });
 
 export type CreateMenuInput = z.infer<typeof CreateMenuSchema>;

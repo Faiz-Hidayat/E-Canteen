@@ -1,5 +1,9 @@
 "use server";
 
+import { mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import sharp from "sharp";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -19,6 +23,63 @@ import {
 type ActionResult<T = null> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+type UploadResult =
+  | { success: true; data: { photoUrl: string } }
+  | { success: false; error: string };
+
+const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
+const MAX_INPUT_BYTES = 15 * 1024 * 1024;
+
+async function compressMenuImage(inputBuffer: Buffer): Promise<Buffer> {
+  const image = sharp(inputBuffer, { failOn: "none" }).rotate();
+  const metadata = await image.metadata();
+
+  const originalWidth = metadata.width ?? 1920;
+  let targetWidth = Math.min(originalWidth, 1920);
+  let quality = 88;
+
+  let output = await image
+    .resize({ width: targetWidth, fit: "inside", withoutEnlargement: true })
+    .webp({ quality, effort: 6, smartSubsample: true })
+    .toBuffer();
+
+  for (let i = 0; i < 7 && output.length > MAX_OUTPUT_BYTES; i += 1) {
+    quality = Math.max(60, quality - 6);
+    targetWidth = Math.max(720, Math.floor(targetWidth * 0.88));
+
+    output = await sharp(inputBuffer, { failOn: "none" })
+      .rotate()
+      .resize({ width: targetWidth, fit: "inside", withoutEnlargement: true })
+      .webp({ quality, effort: 6, smartSubsample: true })
+      .toBuffer();
+  }
+
+  if (output.length > MAX_OUTPUT_BYTES) {
+    throw new Error("Compressed image still exceeds max output size");
+  }
+
+  return output;
+}
+
+// ── File helpers ───────────────────────────────────────────
+
+const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "menus");
+
+function isLocalUpload(url: string | null | undefined): boolean {
+  return !!url && url.startsWith("/uploads/menus/");
+}
+
+async function deleteLocalFile(photoUrl: string): Promise<void> {
+  try {
+    const fileName = photoUrl.replace("/uploads/menus/", "");
+    if (!fileName || fileName.includes("..") || fileName.includes("/")) return;
+    const filePath = path.join(UPLOADS_DIR, fileName);
+    await unlink(filePath);
+  } catch {
+    // File may already be gone — ignore
+  }
+}
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -93,6 +154,62 @@ export async function createMenu(
   }
 }
 
+// ── uploadMenuPhoto ────────────────────────────────────────
+
+export async function uploadMenuPhoto(formData: FormData): Promise<UploadResult> {
+  const tenant = await getAdminTenantId();
+  if ("error" in tenant) return { success: false, error: tenant.error };
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return { success: false, error: "File foto tidak valid." };
+  }
+
+  const allowedMime = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedMime.includes(file.type)) {
+    return {
+      success: false,
+      error: "Format foto belum didukung. Pakai JPG, PNG, atau WEBP ya.",
+    };
+  }
+
+  if (file.size > MAX_INPUT_BYTES) {
+    return {
+      success: false,
+      error: "Ukuran foto terlalu besar. Maksimal 15MB ya.",
+    };
+  }
+
+  try {
+    const extension = "webp";
+    const fileName = `menu-${Date.now()}-${randomUUID()}.${extension}`;
+    const targetDir = path.join(process.cwd(), "public", "uploads", "menus");
+    const targetPath = path.join(targetDir, fileName);
+
+    await mkdir(targetDir, { recursive: true });
+
+    const inputBuffer = Buffer.from(await file.arrayBuffer());
+    const compressedBuffer = await compressMenuImage(inputBuffer);
+    await writeFile(targetPath, compressedBuffer);
+
+    return {
+      success: true,
+      data: { photoUrl: `/uploads/menus/${fileName}` },
+    };
+  } catch (error) {
+    console.error("[uploadMenuPhoto]", {
+      tenantId: tenant.tenantId,
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+
+    return {
+      success: false,
+      error: "Upload foto gagal. Coba ulang lagi ya.",
+    };
+  }
+}
+
 // ── updateMenu ─────────────────────────────────────────────
 
 export async function updateMenu(
@@ -113,10 +230,10 @@ export async function updateMenu(
   const { menuId, name, description, price, category, photoUrl } = parsed.data;
 
   try {
-    // 3. Verify ownership
+    // 3. Verify ownership + get current photo
     const existing = await prisma.menu.findFirst({
       where: { id: menuId, tenant_id: tenant.tenantId },
-      select: { id: true },
+      select: { id: true, photo_url: true },
     });
 
     if (!existing) {
@@ -136,6 +253,15 @@ export async function updateMenu(
       where: { id: menuId },
       data: updateData,
     });
+
+    // 5. Delete old local photo if replaced by a different one
+    if (
+      photoUrl !== undefined &&
+      existing.photo_url !== photoUrl &&
+      isLocalUpload(existing.photo_url)
+    ) {
+      await deleteLocalFile(existing.photo_url!);
+    }
 
     revalidatePath("/admin/menus");
     revalidatePath("/menu");
@@ -200,7 +326,18 @@ export async function deleteMenu(
       };
     }
 
+    // Grab photo_url before deleting so we can clean up the file
+    const menuToDelete = await prisma.menu.findUnique({
+      where: { id: menuId },
+      select: { photo_url: true },
+    });
+
     await prisma.menu.delete({ where: { id: menuId } });
+
+    // Delete local photo file
+    if (isLocalUpload(menuToDelete?.photo_url)) {
+      await deleteLocalFile(menuToDelete!.photo_url!);
+    }
 
     revalidatePath("/admin/menus");
     revalidatePath("/menu");
@@ -267,5 +404,68 @@ export async function toggleMenuAvailability(
       success: false,
       error: "Gagal mengubah ketersediaan menu. Coba lagi ya.",
     };
+  }
+}
+
+// ── cleanupOrphanedUploads ─────────────────────────────────
+// Deletes uploaded photos older than `maxAgeMs` that aren't referenced by any menu.
+// Called on a best-effort basis (e.g. cron, admin action, or on page load).
+
+const ORPHAN_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
+
+export async function cleanupOrphanedUploads(): Promise<ActionResult<{ deleted: number }>> {
+  const tenant = await getAdminTenantId();
+  if ("error" in tenant) return { success: false, error: tenant.error };
+
+  try {
+    // 1. Get all local photo URLs currently used by menus
+    const usedMenus = await prisma.menu.findMany({
+      where: {
+        photo_url: { not: null },
+        tenant_id: tenant.tenantId,
+      },
+      select: { photo_url: true },
+    });
+
+    const usedFileNames = new Set(
+      usedMenus
+        .map((m) => m.photo_url?.replace("/uploads/menus/", "") ?? "")
+        .filter(Boolean),
+    );
+
+    // 2. List all files on disk
+    let files: string[];
+    try {
+      files = await readdir(UPLOADS_DIR);
+    } catch {
+      return { success: true, data: { deleted: 0 } };
+    }
+
+    const now = Date.now();
+    let deleted = 0;
+
+    for (const file of files) {
+      if (usedFileNames.has(file)) continue; // still referenced
+
+      const filePath = path.join(UPLOADS_DIR, file);
+      try {
+        const fileStat = await stat(filePath);
+        const age = now - fileStat.mtimeMs;
+        if (age < ORPHAN_MAX_AGE_MS) continue; // too fresh, user might still save
+
+        await unlink(filePath);
+        deleted += 1;
+      } catch {
+        // skip inaccessible files
+      }
+    }
+
+    return { success: true, data: { deleted } };
+  } catch (error) {
+    console.error("[cleanupOrphanedUploads]", {
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    return { success: false, error: "Cleanup gagal." };
   }
 }

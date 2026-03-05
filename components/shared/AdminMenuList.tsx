@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -9,6 +9,7 @@ import {
   UtensilsCrossed,
   Loader2,
   ImageIcon,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,6 +31,7 @@ import {
   updateMenu,
   deleteMenu,
   toggleMenuAvailability,
+  uploadMenuPhoto,
 } from "@/actions/menu.actions";
 import { formatRupiah } from "@/lib/utils/format";
 import { playfulToast } from "@/lib/toast";
@@ -53,6 +55,16 @@ const EMPTY_FORM: MenuFormData = {
   photoUrl: "",
 };
 
+function mapEditItemToForm(item: AdminMenuItem): MenuFormData {
+  return {
+    name: item.name,
+    description: item.description ?? "",
+    price: String(item.price),
+    category: item.category ?? "",
+    photoUrl: item.photoUrl ?? "",
+  };
+}
+
 function MenuFormDialog({
   open,
   onOpenChange,
@@ -62,21 +74,55 @@ function MenuFormDialog({
   onOpenChange: (open: boolean) => void;
   editItem: AdminMenuItem | null;
 }) {
-  const [form, setForm] = useState<MenuFormData>(() =>
-    editItem
-      ? {
-          name: editItem.name,
-          description: editItem.description ?? "",
-          price: String(editItem.price),
-          category: editItem.category ?? "",
-          photoUrl: editItem.photoUrl ?? "",
-        }
-      : EMPTY_FORM
-  );
+  const [form, setForm] = useState<MenuFormData>(EMPTY_FORM);
   const [isPending, startTransition] = useTransition();
+  const [isUploadPending, startUploadTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
+  const [isPreviewBroken, setIsPreviewBroken] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isEdit = !!editItem;
+
+  useEffect(() => {
+    if (!open) return;
+    if (editItem) {
+      setForm(mapEditItemToForm(editItem));
+      return;
+    }
+    setForm(EMPTY_FORM);
+  }, [open, editItem]);
+
+  useEffect(() => {
+    setIsPreviewBroken(false);
+  }, [form.photoUrl]);
+
+  const handlePhotoUpload = (file: File | null) => {
+    if (!file) return;
+
+    startUploadTransition(async () => {
+      const payload = new FormData();
+      payload.append("file", file);
+
+      const result = await uploadMenuPhoto(payload);
+      if (!result.success) {
+        playfulToast.error(result.error);
+        return;
+      }
+
+      setForm((prev) => ({ ...prev, photoUrl: result.data.photoUrl }));
+      playfulToast.success("Foto berhasil diupload.");
+    });
+  };
+
+  const handlePhotoDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingPhoto(false);
+
+    const file = e.dataTransfer.files?.[0] ?? null;
+    handlePhotoUpload(file);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,17 +255,114 @@ function MenuFormDialog({
             <Label htmlFor="menu-photo">URL Foto</Label>
             <Input
               id="menu-photo"
-              type="url"
-              placeholder="https://example.com/foto-menu.jpg"
+              type="text"
+              inputMode="url"
+              placeholder="https://example.com/foto-menu.jpg atau /uploads/menus/xxx.webp"
               value={form.photoUrl}
               onChange={(e) =>
                 setForm((f) => ({ ...f, photoUrl: e.target.value }))
               }
             />
+            <div className="space-y-3">
+              <Label htmlFor="menu-photo-file">Upload Foto</Label>
+
+              {form.photoUrl && !isPreviewBroken ? (
+                <div className="overflow-hidden rounded-md border border-border bg-muted/30">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.photoUrl}
+                    alt="Preview foto menu"
+                    className="h-40 w-full object-cover"
+                    onError={() => setIsPreviewBroken(true)}
+                  />
+                </div>
+              ) : (
+                <div className="flex h-40 items-center justify-center rounded-md border border-dashed border-border bg-muted/20">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <ImageIcon className="size-6" />
+                    <p className="text-xs">Preview foto akan muncul di sini</p>
+                  </div>
+                </div>
+              )}
+
+              <div
+                className={`hidden rounded-md border border-dashed p-4 text-center md:block ${isDraggingPhoto ? "border-primary bg-primary/5" : "border-border bg-muted/20"}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingPhoto(true);
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingPhoto(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingPhoto(false);
+                }}
+                onDrop={handlePhotoDrop}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="size-5 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Drag & drop foto ke sini
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadPending}
+                  >
+                    Pilih File
+                  </Button>
+                </div>
+              </div>
+
+              <Input
+                id="menu-photo-file"
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={isUploadPending}
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  handlePhotoUpload(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+              <Input
+                id="menu-photo-file-mobile"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={isUploadPending}
+                className="md:hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  handlePhotoUpload(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Format JPG/PNG/WEBP. File besar otomatis dikompres supaya tetap jernih.
+              </p>
+              {isUploadPending && (
+                <p className="text-xs text-muted-foreground">
+                  Lagi upload dan kompres foto...
+                </p>
+              )}
+            </div>
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={isPending} className="w-full gap-2">
+            <Button
+              type="submit"
+              disabled={isPending || isUploadPending}
+              className="w-full gap-2"
+            >
               {isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : isEdit ? (
@@ -272,7 +415,7 @@ function DeleteDialog({
             dibatalkan.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

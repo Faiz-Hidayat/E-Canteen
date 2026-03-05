@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AdminMenuList } from "@/components/shared/AdminMenuList";
+import { cleanupOrphanedUploads } from "@/actions/menu.actions";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,9 @@ export default async function AdminMenusPage() {
     category: m.category,
     isAvailable: m.is_available,
   }));
+
+  // Best-effort cleanup: remove uploaded photos not saved to any menu (>30 min old)
+  cleanupOrphanedUploads().catch(() => {});
 
   return (
     <div>
