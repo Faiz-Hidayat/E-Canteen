@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/shared/BottomNav";
 import { Footer } from "@/components/shared/Footer";
 import { CartFAB } from "@/components/shared/CartFAB";
 import { AnimatedBlobs } from "@/components/shared/AnimatedBlobs";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export default async function AppLayout({
   children,
@@ -19,9 +20,8 @@ export default async function AppLayout({
       <AnimatedBlobs />
       <Navbar userName={session?.user?.name} isLoggedIn={isLoggedIn} />
 
-      {/* Main content — extra bottom padding for mobile bottom nav */}
       <main className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-4 py-6 pb-20 md:pb-6">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
 
       <Footer />

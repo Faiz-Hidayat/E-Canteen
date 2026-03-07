@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/shared/AdminSidebar";
 import { Footer } from "@/components/shared/Footer";
 import { AnimatedBlobs } from "@/components/shared/AnimatedBlobs";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export default async function AdminLayout({
   children,
@@ -52,7 +53,7 @@ export default async function AdminLayout({
         </header>
 
         <main className="flex-1 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
 
         <Footer />

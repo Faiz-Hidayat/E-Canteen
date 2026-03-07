@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SuperAdminSidebar } from "@/components/shared/SuperAdminSidebar";
 import { Footer } from "@/components/shared/Footer";
 import { AnimatedBlobs } from "@/components/shared/AnimatedBlobs";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 export default async function SuperAdminLayout({
   children,
@@ -37,7 +38,7 @@ export default async function SuperAdminLayout({
         </header>
 
         <main className="flex-1 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
 
         <Footer />

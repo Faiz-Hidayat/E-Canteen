@@ -552,6 +552,7 @@ function AdminMenuCard({
               variant="outline"
               className="gap-1.5 text-xs text-red-500 hover:bg-red-50 hover:text-red-600"
               onClick={() => onDelete(item)}
+              aria-label={`Hapus ${item.name}`}
             >
               <Trash2 className="size-3" />
             </Button>

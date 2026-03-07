@@ -3,11 +3,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function MenuLoading() {
   return (
     <div className="space-y-6">
-      {/* Hero skeleton */}
-      <Skeleton className="h-32 w-full rounded-[32px]" />
-
-      {/* Wallet card skeleton */}
-      <Skeleton className="h-40 w-full rounded-[32px]" />
+      {/* Hero + Wallet: stacked on mobile, side-by-side on desktop */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <Skeleton className="h-32 rounded-[32px] lg:col-span-3" />
+        <Skeleton className="h-40 rounded-[32px] lg:col-span-2" />
+      </div>
 
       {/* Search bar skeleton */}
       <Skeleton className="h-14 w-full rounded-full" />

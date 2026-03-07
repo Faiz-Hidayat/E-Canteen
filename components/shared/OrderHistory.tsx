@@ -86,7 +86,7 @@ export function OrderHistory({ orders }: OrderHistoryProps) {
                   <Badge
                     variant="outline"
                     className={cn(
-                      "text-[10px] font-extrabold w-fit",
+                      "text-[10px] font-extrabold w-fit transition-colors duration-200",
                       statusBadgeClass(order.status)
                     )}
                   >

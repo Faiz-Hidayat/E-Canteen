@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag,
   Clock,
@@ -12,6 +12,7 @@ import {
   Minus,
   Plus,
   Trash2,
+  CheckCircle2,
 } from "lucide-react";
 import { playfulToast } from "@/lib/toast";
 
@@ -74,6 +75,7 @@ export function CheckoutForm() {
     "BALANCE"
   );
   const [notes, setNotes] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const total = getTotal();
   const tenantId = items[0]?.tenantId;
@@ -131,7 +133,8 @@ export function CheckoutForm() {
       if (paymentMethod === "BALANCE") {
         playfulToast.orderCreated();
         clearCart();
-        router.push("/orders");
+        setShowSuccess(true);
+        setTimeout(() => router.push("/orders"), 1200);
         return;
       }
 
@@ -154,7 +157,8 @@ export function CheckoutForm() {
         onSuccess: () => {
           playfulToast.success("Pembayaran berhasil! 🎉");
           clearCart();
-          router.push("/orders");
+          setShowSuccess(true);
+          setTimeout(() => router.push("/orders"), 1200);
         },
         onPending: () => {
           playfulToast.paymentPending();
@@ -174,7 +178,36 @@ export function CheckoutForm() {
   // ── Render ───────────────────────────────────────────────
 
   return (
-    <motion.div
+    <>
+      {/* ── Success Overlay ────────────────────────── */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 15 }}
+            >
+              <CheckCircle2 className="h-20 w-20 text-accent" />
+            </motion.div>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-4 text-lg font-extrabold text-gray-800"
+            >
+              Pesanan Berhasil! 🎉
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
@@ -214,9 +247,10 @@ export function CheckoutForm() {
                   onClick={() =>
                     updateQuantity(item.menuId, item.quantity - 1)
                   }
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  aria-label={`Kurangi ${item.name}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-3.5 w-3.5" />
                 </button>
                 <span className="w-5 text-center text-xs font-bold">
                   {item.quantity}
@@ -225,9 +259,10 @@ export function CheckoutForm() {
                   onClick={() =>
                     updateQuantity(item.menuId, item.quantity + 1)
                   }
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                  aria-label={`Tambah ${item.name}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
 
@@ -237,6 +272,7 @@ export function CheckoutForm() {
 
               <button
                 onClick={() => removeItem(item.menuId)}
+                aria-label={`Hapus ${item.name}`}
                 className="text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -362,5 +398,6 @@ export function CheckoutForm() {
         )}
       </Button>
     </motion.div>
+    </>
   );
 }

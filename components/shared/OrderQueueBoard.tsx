@@ -156,7 +156,7 @@ function OrderCard({ order }: { order: QueueOrder }) {
           <div className="flex items-center gap-2">
             <Badge
               variant="secondary"
-              className={`${config.bgColor} ${config.color} gap-1 border-0`}
+              className={`${config.bgColor} ${config.color} gap-1 border-0 transition-colors duration-200`}
             >
               {config.icon}
               {getStatusLabel(order.status)}

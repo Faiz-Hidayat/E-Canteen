@@ -35,7 +35,7 @@ export function CartDrawer({ children }: CartDrawerProps) {
     <Drawer>
       <DrawerTrigger asChild>
         {children ?? (
-          <button className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors hover:bg-muted">
+          <button aria-label="Buka keranjang" className="relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors hover:bg-muted">
             <ShoppingCart className="size-5 text-foreground" />
             {itemCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
@@ -99,7 +99,8 @@ export function CartDrawer({ children }: CartDrawerProps) {
                       onClick={() =>
                         updateQuantity(item.menuId, item.quantity - 1)
                       }
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
+                      aria-label={`Kurangi ${item.name}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200"
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
@@ -110,7 +111,8 @@ export function CartDrawer({ children }: CartDrawerProps) {
                       onClick={() =>
                         updateQuantity(item.menuId, item.quantity + 1)
                       }
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+                      aria-label={`Tambah ${item.name}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>

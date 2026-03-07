@@ -3,14 +3,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function MenusLoading() {
   return (
     <div className="space-y-6">
-      {/* Heading skeleton */}
-      <div>
-        <Skeleton className="h-8 w-36 rounded" />
-        <Skeleton className="mt-2 h-4 w-72 rounded" />
-      </div>
+      {/* Gradient header skeleton */}
+      <Skeleton className="h-36 w-full rounded-2xl" />
 
       {/* Add button skeleton */}
-      <Skeleton className="h-9 w-44 rounded-md" />
+      <Skeleton className="h-10 w-44 rounded-full" />
 
       {/* Menu grid skeleton */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
