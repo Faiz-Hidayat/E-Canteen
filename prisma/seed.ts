@@ -149,7 +149,7 @@ async function main() {
     },
   });
 
-  const nasiUduk = await prisma.menu.create({
+  await prisma.menu.create({
     data: {
       tenant_id: tenantPakJoko.id,
       name: "Nasi Uduk",
@@ -182,7 +182,7 @@ async function main() {
     },
   });
 
-  const rotiBakar = await prisma.menu.create({
+  await prisma.menu.create({
     data: {
       tenant_id: tenantPakJoko.id,
       name: "Roti Bakar",

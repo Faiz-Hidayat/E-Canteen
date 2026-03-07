@@ -33,3 +33,12 @@ export const AdjustBalanceSchema = z.object({
 });
 
 export type AdjustBalanceInput = z.infer<typeof AdjustBalanceSchema>;
+
+// ── Get All Users Filters Schema ────────────────────────────
+
+export const GetAllUsersFiltersSchema = z.object({
+  role: z.enum(["ALL", "USER", "ADMIN", "SUPER_ADMIN"]).optional(),
+  search: z.string().max(100, "Pencarian maksimal 100 karakter.").optional(),
+});
+
+export type GetAllUsersFiltersInput = z.infer<typeof GetAllUsersFiltersSchema>;

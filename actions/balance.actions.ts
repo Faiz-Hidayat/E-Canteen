@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { createSnapTransaction } from "@/lib/midtrans";
 import { prisma } from "@/lib/prisma";
-import { TopUpSchema } from "@/lib/validations/balance.schema";
+import { TopUpSchema, GetBalanceHistorySchema } from "@/lib/validations/balance.schema";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -98,6 +98,12 @@ export async function getBalanceHistory(
     return { success: false, error: "Kamu harus login dulu ya." };
   }
 
+  // Zod validation
+  const parsed = GetBalanceHistorySchema.safeParse({ limit });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
   const userId = session.user.id;
 
   try {
@@ -116,7 +122,7 @@ export async function getBalanceHistory(
         tenant: { select: { name: true } },
       },
       orderBy: { created_at: "desc" },
-      take: limit,
+      take: parsed.data.limit,
     });
 
     // Fetch top-ups (processed webhooks for this user)
@@ -126,7 +132,7 @@ export async function getBalanceHistory(
         midtrans_order_id: { startsWith: `TOPUP-${userId}-` },
       },
       orderBy: { processed_at: "desc" },
-      take: limit,
+      take: parsed.data.limit,
     });
 
     // Fetch refunded cancelled orders (admin cancelled, balance refunded)
@@ -144,7 +150,7 @@ export async function getBalanceHistory(
         tenant: { select: { name: true } },
       },
       orderBy: { created_at: "desc" },
-      take: limit,
+      take: parsed.data.limit,
     });
 
     const history: BalanceHistoryItem[] = [];
@@ -188,7 +194,7 @@ export async function getBalanceHistory(
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    return { success: true, data: history.slice(0, limit) };
+    return { success: true, data: history.slice(0, parsed.data.limit) };
   } catch (error) {
     console.error("[getBalanceHistory]", {
       userId,

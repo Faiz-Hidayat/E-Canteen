@@ -43,3 +43,11 @@ export const UpdateTenantSchema = z.object({
 });
 
 export type UpdateTenantInput = z.infer<typeof UpdateTenantSchema>;
+
+// ── Delete Tenant Schema ────────────────────────────────────
+
+export const DeleteTenantSchema = z.object({
+  tenantId: z.string().min(1, "Tenant ID wajib diisi."),
+});
+
+export type DeleteTenantInput = z.infer<typeof DeleteTenantSchema>;

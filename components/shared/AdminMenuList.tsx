@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -74,7 +74,9 @@ function MenuFormDialog({
   onOpenChange: (open: boolean) => void;
   editItem: AdminMenuItem | null;
 }) {
-  const [form, setForm] = useState<MenuFormData>(EMPTY_FORM);
+  const [form, setForm] = useState<MenuFormData>(
+    editItem ? mapEditItemToForm(editItem) : EMPTY_FORM
+  );
   const [isPending, startTransition] = useTransition();
   const [isUploadPending, startUploadTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -83,19 +85,6 @@ function MenuFormDialog({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isEdit = !!editItem;
-
-  useEffect(() => {
-    if (!open) return;
-    if (editItem) {
-      setForm(mapEditItemToForm(editItem));
-      return;
-    }
-    setForm(EMPTY_FORM);
-  }, [open, editItem]);
-
-  useEffect(() => {
-    setIsPreviewBroken(false);
-  }, [form.photoUrl]);
 
   const handlePhotoUpload = (file: File | null) => {
     if (!file) return;
@@ -111,6 +100,7 @@ function MenuFormDialog({
       }
 
       setForm((prev) => ({ ...prev, photoUrl: result.data.photoUrl }));
+      setIsPreviewBroken(false);
       playfulToast.success("Foto berhasil diupload.");
     });
   };
@@ -255,9 +245,10 @@ function MenuFormDialog({
               inputMode="url"
               placeholder="https://example.com/foto-menu.jpg atau /uploads/menus/xxx.webp"
               value={form.photoUrl}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, photoUrl: e.target.value }))
-              }
+              onChange={(e) => {
+                setForm((f) => ({ ...f, photoUrl: e.target.value }));
+                setIsPreviewBroken(false);
+              }}
             />
             <div className="space-y-3">
               <Label htmlFor="menu-photo-file">Upload Foto</Label>
@@ -624,6 +615,7 @@ export function AdminMenuList({ menus }: AdminMenuListProps) {
 
       {/* Form Dialog */}
       <MenuFormDialog
+        key={editItem?.id ?? 'new'}
         open={showForm}
         onOpenChange={handleCloseForm}
         editItem={editItem}

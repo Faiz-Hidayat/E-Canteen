@@ -1,11 +1,25 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcryptjs";
 import { RegisterSchema, LoginSchema } from "@/lib/validations/auth.schema";
 import { AuthError } from "next-auth";
+import { createRateLimiter } from "@/lib/utils/rate-limit";
+
+// ── Rate Limiters ──────────────────────────────────────────
+
+const loginLimiter = createRateLimiter("login", {
+  maxRequests: 5,
+  windowMs: 60_000, // 5 per minute
+});
+
+const registerLimiter = createRateLimiter("register", {
+  maxRequests: 3,
+  windowMs: 60_000, // 3 per minute
+});
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -22,6 +36,14 @@ type LoginResult =
 export async function registerUser(
   input: z.infer<typeof RegisterSchema>
 ): Promise<RegisterResult> {
+  // 0. Rate limiting
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateCheck = registerLimiter.check(ip);
+  if (!rateCheck.allowed) {
+    return { success: false, error: rateCheck.error };
+  }
+
   // 1. Zod validation
   const parsed = RegisterSchema.safeParse(input);
   if (!parsed.success) {
@@ -74,6 +96,14 @@ export async function registerUser(
 export async function loginUser(
   input: z.infer<typeof LoginSchema>
 ): Promise<LoginResult> {
+  // 0. Rate limiting
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rateCheck = loginLimiter.check(ip);
+  if (!rateCheck.allowed) {
+    return { success: false, error: rateCheck.error };
+  }
+
   // 1. Zod validation
   const parsed = LoginSchema.safeParse(input);
   if (!parsed.success) {

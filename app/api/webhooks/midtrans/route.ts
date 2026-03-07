@@ -2,6 +2,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createRateLimiter } from "@/lib/utils/rate-limit";
+
+// ── Rate Limiter ───────────────────────────────────────────
+
+const webhookLimiter = createRateLimiter("midtrans-webhook", {
+  maxRequests: 30,
+  windowMs: 60_000, // 30 per minute per IP
+});
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -106,6 +114,16 @@ function getMidtransStatusLabel(transactionStatus: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // 0. Rate limiting
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rateCheck = webhookLimiter.check(ip);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429 }
+      );
+    }
+
     const notification = (await request.json()) as MidtransNotification;
 
     // 1. Log metadata (never secrets)

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import {
   UpdateRoleSchema,
   AdjustBalanceSchema,
+  GetAllUsersFiltersSchema,
   type UpdateRoleInput,
   type AdjustBalanceInput,
 } from "@/lib/validations/user.schema";
@@ -47,19 +48,25 @@ export async function getAllUsers(
     return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
   }
 
+  // 2. Zod validation
+  const parsed = GetAllUsersFiltersSchema.safeParse(filters ?? {});
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
   try {
     const where: Record<string, unknown> = {};
 
     // Role filter
-    if (filters?.role && filters.role !== "ALL") {
-      where.role = filters.role;
+    if (parsed.data.role && parsed.data.role !== "ALL") {
+      where.role = parsed.data.role;
     }
 
     // Search filter (name or email)
-    if (filters?.search) {
+    if (parsed.data.search) {
       where.OR = [
-        { name: { contains: filters.search } },
-        { email: { contains: filters.search } },
+        { name: { contains: parsed.data.search } },
+        { email: { contains: parsed.data.search } },
       ];
     }
 
@@ -88,9 +95,10 @@ export async function getAllUsers(
     }));
 
     return { success: true, data };
-  } catch (error) {
+  } catch (err) {
     console.error("[getAllUsers]", {
       timestamp: new Date().toISOString(),
+      error: err instanceof Error ? err.message : "Unknown error",
     });
     return {
       success: false,
@@ -159,10 +167,11 @@ export async function updateUserRole(
     revalidatePath("/super-admin/users");
 
     return { success: true, data: null };
-  } catch (error) {
+  } catch (err) {
     console.error("[updateUserRole]", {
       userId,
       timestamp: new Date().toISOString(),
+      error: err instanceof Error ? err.message : "Unknown error",
     });
     return {
       success: false,

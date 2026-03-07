@@ -8,7 +8,6 @@ import {
   ShoppingBag,
   Wallet,
   TrendingUp,
-  TrendingDown,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +22,8 @@ export default async function SuperAdminDashboardPage() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const [
     totalUsers,
@@ -50,7 +51,7 @@ export default async function SuperAdminDashboardPage() {
     // Weekly orders for chart (last 7 days)
     prisma.order.findMany({
       where: {
-        created_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        created_at: { gte: sevenDaysAgo },
         status: { notIn: ["CANCELLED"] },
       },
       select: { created_at: true, total_amount: true },

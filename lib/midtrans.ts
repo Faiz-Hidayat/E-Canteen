@@ -63,7 +63,7 @@ export async function createSnapTransaction(
   const errorUrl = `${appUrl}${params.errorPath ?? "/cart"}`;
 
   // Build request body (strip our custom path fields)
-  const { finishPath, unfinishPath, errorPath, ...rest } = params;
+  const { finishPath: _fp, unfinishPath: _up, errorPath: _ep, ...rest } = params;
   const body = {
     ...rest,
     callbacks: {

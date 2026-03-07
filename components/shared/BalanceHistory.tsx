@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDownLeft, ArrowUpRight, RotateCcw, History, Loader2 } from "lucide-react";
 import { getBalanceHistory, type BalanceHistoryItem } from "@/actions/balance.actions";
@@ -55,18 +55,19 @@ export function BalanceHistory() {
   const [items, setItems] = useState<BalanceHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchHistory = useCallback(async () => {
-    setIsLoading(true);
-    const result = await getBalanceHistory(20);
-    if (result.success) {
-      setItems(result.data);
-    }
-    setIsLoading(false);
-  }, []);
-
   useEffect(() => {
+    let cancelled = false;
+    async function fetchHistory() {
+      setIsLoading(true);
+      const result = await getBalanceHistory(20);
+      if (!cancelled && result.success) {
+        setItems(result.data);
+      }
+      if (!cancelled) setIsLoading(false);
+    }
     void fetchHistory();
-  }, [fetchHistory]);
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <motion.div

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Mail, ShieldCheck, LogOut } from "lucide-react";
+import { User, Mail } from "lucide-react";
 import { NumberTicker } from "@/components/magic/NumberTicker";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

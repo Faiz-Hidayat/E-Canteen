@@ -67,6 +67,16 @@ export function NotificationBell() {
   const prevCountRef = useRef(0);
   const isInitializedRef = useRef(false);
 
+  // Fetch full list
+  const fetchList = useCallback(async () => {
+    setIsLoading(true);
+    const result = await getNotifications(20);
+    if (result.success) {
+      setNotifications(result.data);
+    }
+    setIsLoading(false);
+  }, []);
+
   // Fetch unread count (polling)
   const fetchCount = useCallback(async () => {
     const result = await getUnreadCount();
@@ -91,17 +101,7 @@ export function NotificationBell() {
       prevCountRef.current = newCount;
       setUnreadCount(newCount);
     }
-  }, [router]);
-
-  // Fetch full list
-  const fetchList = useCallback(async () => {
-    setIsLoading(true);
-    const result = await getNotifications(20);
-    if (result.success) {
-      setNotifications(result.data);
-    }
-    setIsLoading(false);
-  }, []);
+  }, [router, fetchList]);
 
   // Poll unread count via interval subscription
   useEffect(() => {

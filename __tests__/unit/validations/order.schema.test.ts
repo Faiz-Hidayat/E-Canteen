@@ -98,7 +98,7 @@ describe("CreateOrderSchema", () => {
   });
 
   it("defaults notes to empty string when omitted", () => {
-    const { notes: _, ...noNotes } = validOrder();
+    const { notes: _notes, ...noNotes } = validOrder();
     const result = CreateOrderSchema.safeParse(noNotes);
     expect(result.success).toBe(true);
     if (result.success) {
@@ -140,7 +140,7 @@ describe("CreateOrderSchema", () => {
   });
 
   it("rejects missing tenantId", () => {
-    const { tenantId: _, ...noTenant } = validOrder();
+    const { tenantId: _tenantId, ...noTenant } = validOrder();
     const result = CreateOrderSchema.safeParse(noTenant);
     expect(result.success).toBe(false);
   });
@@ -161,7 +161,7 @@ describe("CreateOrderSchema", () => {
   });
 
   it("rejects missing pickupTime", () => {
-    const { pickupTime: _, ...noPickup } = validOrder();
+    const { pickupTime: _pickupTime, ...noPickup } = validOrder();
     const result = CreateOrderSchema.safeParse(noPickup);
     expect(result.success).toBe(false);
   });

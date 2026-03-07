@@ -17,7 +17,6 @@ export default defineConfig({
         "actions/**",
       ],
       reporter: ["text", "html"],
-      all: true,
     },
   },
   resolve: {

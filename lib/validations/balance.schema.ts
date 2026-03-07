@@ -10,3 +10,17 @@ export const TopUpSchema = z.object({
 });
 
 export type TopUpInput = z.infer<typeof TopUpSchema>;
+
+// ── Get Balance History Schema ──────────────────────────────
+
+export const GetBalanceHistorySchema = z.object({
+  limit: z
+    .number()
+    .int("Limit harus bilangan bulat.")
+    .min(1, "Minimal 1.")
+    .max(100, "Maksimal 100.")
+    .optional()
+    .default(20),
+});
+
+export type GetBalanceHistoryInput = z.infer<typeof GetBalanceHistorySchema>;

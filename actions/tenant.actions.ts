@@ -7,6 +7,7 @@ import { hash } from "bcryptjs";
 import {
   CreateTenantSchema,
   UpdateTenantSchema,
+  DeleteTenantSchema,
   type CreateTenantInput,
   type UpdateTenantInput,
 } from "@/lib/validations/tenant.schema";
@@ -103,9 +104,10 @@ export async function createTenant(
     revalidatePath("/super-admin");
 
     return { success: true, data: result };
-  } catch (error) {
+  } catch (err) {
     console.error("[createTenant]", {
       timestamp: new Date().toISOString(),
+      error: err instanceof Error ? err.message : "Unknown error",
     });
     return {
       success: false,
@@ -168,10 +170,11 @@ export async function updateTenant(
     revalidatePath("/super-admin");
 
     return { success: true, data: null };
-  } catch (error) {
+  } catch (err) {
     console.error("[updateTenant]", {
       tenantId,
       timestamp: new Date().toISOString(),
+      error: err instanceof Error ? err.message : "Unknown error",
     });
     return {
       success: false,
@@ -194,8 +197,10 @@ export async function deleteTenant(
     return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
   }
 
-  if (!tenantId) {
-    return { success: false, error: "Tenant ID wajib diisi." };
+  // 2. Zod validation
+  const parsed = DeleteTenantSchema.safeParse({ tenantId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
   }
 
   try {
@@ -267,10 +272,11 @@ export async function deleteTenant(
     revalidatePath("/super-admin/users");
 
     return { success: true, data: null };
-  } catch (error) {
+  } catch (err) {
     console.error("[deleteTenant]", {
       tenantId,
       timestamp: new Date().toISOString(),
+      error: err instanceof Error ? err.message : "Unknown error",
     });
     return {
       success: false,

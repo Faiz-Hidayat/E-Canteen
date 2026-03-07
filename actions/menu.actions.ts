@@ -17,6 +17,7 @@ import {
   type DeleteMenuInput,
   type ToggleMenuAvailabilityInput,
 } from "@/lib/validations/menu.schema";
+import { validateUploadedFile } from "@/lib/utils/secure-upload";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -165,19 +166,12 @@ export async function uploadMenuPhoto(formData: FormData): Promise<UploadResult>
     return { success: false, error: "File foto tidak valid." };
   }
 
-  const allowedMime = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedMime.includes(file.type)) {
-    return {
-      success: false,
-      error: "Format foto belum didukung. Pakai JPG, PNG, atau WEBP ya.",
-    };
-  }
-
-  if (file.size > MAX_INPUT_BYTES) {
-    return {
-      success: false,
-      error: "Ukuran foto terlalu besar. Maksimal 15MB ya.",
-    };
+  // Secure upload validation (MIME, extension, size, dangerous file check)
+  const validation = validateUploadedFile(file, {
+    maxSize: MAX_INPUT_BYTES, // 15MB pre-compression limit
+  });
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
   }
 
   try {

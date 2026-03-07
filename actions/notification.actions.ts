@@ -2,6 +2,10 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  MarkAsReadSchema,
+  GetNotificationsSchema,
+} from "@/lib/validations/notification.schema";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -29,10 +33,16 @@ export async function getNotifications(
     return { success: false, error: "Kamu harus login dulu." };
   }
 
+  // Zod validation
+  const parsed = GetNotificationsSchema.safeParse({ limit });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
   const notifications = await prisma.notification.findMany({
     where: { user_id: session.user.id },
     orderBy: { created_at: "desc" },
-    take: limit,
+    take: parsed.data.limit,
   });
 
   return {
@@ -74,9 +84,15 @@ export async function markAsRead(
     return { success: false, error: "Kamu harus login dulu." };
   }
 
+  // Zod validation
+  const parsed = MarkAsReadSchema.safeParse({ notificationId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
   // Verify ownership
   const notification = await prisma.notification.findUnique({
-    where: { id: notificationId },
+    where: { id: parsed.data.notificationId },
     select: { user_id: true },
   });
 
@@ -85,7 +101,7 @@ export async function markAsRead(
   }
 
   await prisma.notification.update({
-    where: { id: notificationId },
+    where: { id: parsed.data.notificationId },
     data: { is_read: true },
   });
 
