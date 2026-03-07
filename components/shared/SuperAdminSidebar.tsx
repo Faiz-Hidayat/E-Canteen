@@ -92,9 +92,6 @@ export function SuperAdminSidebar({ adminName }: SuperAdminSidebarProps) {
                   <p className="truncate text-sm font-bold text-foreground">
                     Super Admin
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    God Mode 🔥
-                  </p>
                 </div>
               </div>
             ) : (

@@ -32,7 +32,6 @@ export default async function SuperAdminLayout({
               <p className="text-sm font-bold text-foreground">
                 Super Admin
               </p>
-              <p className="text-[10px] text-muted-foreground">God Mode 🔥</p>
             </div>
           </div>
         </header>
