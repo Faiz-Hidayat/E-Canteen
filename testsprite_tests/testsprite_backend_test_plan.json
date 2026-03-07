@@ -1,0 +1,12 @@
+[
+  {
+    "id": "TC001",
+    "title": "post api webhooks midtrans valid notification",
+    "description": "Test the /api/webhooks/midtrans endpoint with a valid Midtrans notification body and correct signature_key. Verify that the response is 200 with status 'ok' and that order or top-up statuses are updated accordingly and user balances are credited if applicable."
+  },
+  {
+    "id": "TC002",
+    "title": "post api webhooks midtrans invalid signature",
+    "description": "Test the /api/webhooks/midtrans endpoint with a Midtrans notification body but an invalid signature_key. Verify that the response is 401 with error 'Invalid signature' and no updates are made to orders, top-ups, or user balances."
+  }
+]

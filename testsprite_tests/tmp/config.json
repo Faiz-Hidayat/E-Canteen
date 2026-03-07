@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "E-Canteen",
+    "projectPath": "c:\\Users\\Faiz\\Documents\\sekolah-faiz\\E-Canteen",
+    "testIds": [],
+    "additionalInstruction": "The only true HTTP API route is POST /api/webhooks/midtrans. All other endpoints are Next.js Server Actions not accessible as regular REST APIs. The Midtrans webhook requires SHA512 signature verification: SHA512(order_id + status_code + gross_amount + MIDTRANS_SERVER_KEY). The server key is not available for testing, so the signature test will likely return 401. Focus testing on the webhook endpoint structure and response format.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-BmSF-Zqf9O94VKgiW_ySZ6G71AXnb3xaic8EUpv6PD85hHRlyApGPbH3QDLtFDNd33pNxYpOSd6SM0BFMn2MzRovcT3hEzyNKEViAa7aFsLJMDCURANFFPsVcGrpF1Cd_04"
+    }
+  },
+  "serverPort": 51463,
+  "proxy": "http://bb3d548a-7059-4cd5-ac3c-8b93e7859d7a:go8249bTKs6YSndG0ExGJiqs8ajgOeVE@tun.testsprite.com:8080"
+}

@@ -1,0 +1,337 @@
+version: "2"
+type: backend
+tech_stack:
+  - TypeScript
+  - Next.js 16 (App Router + Server Actions)
+  - PostgreSQL
+  - Prisma v6
+  - Auth.js v5 (NextAuth)
+  - Midtrans Payment Gateway
+  - Zod validation
+  - bcryptjs
+features:
+  - name: Authentication
+    description: User registration and login with credentials-based authentication via Auth.js v5
+    files:
+      - actions/auth.actions.ts
+      - lib/auth.ts
+      - app/api/auth/[...nextauth]/route.ts
+      - lib/validations/auth.schema.ts
+    endpoints:
+      - method: POST
+        path: /api/auth/callback/credentials
+        description: Login with email and password credentials
+        auth_required: false
+        request_schema:
+          body:
+            email: string
+            password: string
+        response_schema:
+          "200": Session with JWT token
+          "401": Invalid credentials
+      - method: POST
+        path: /api/auth/session
+        description: Get current session
+        auth_required: false
+        response_schema:
+          "200": Session object with user id, role, tenantId
+    depends_on: []
+    known_limitations: []
+
+  - name: Order Management
+    description: Create orders with balance or Midtrans payment, update order status (admin), cancel orders with refunds
+    files:
+      - actions/order.actions.ts
+      - lib/validations/order.schema.ts
+    endpoints:
+      - method: POST
+        path: /actions/createOrder
+        description: Create a new order with items, pickup time, and payment method. Deducts balance if BALANCE payment.
+        auth_required: true
+        request_schema:
+          body:
+            tenantId: string
+            items: "Array<{menuId: string, quantity: number}>"
+            pickupTime: "BREAK_1 | BREAK_2"
+            paymentMethod: "BALANCE | MIDTRANS"
+            notes: string (optional, max 200)
+        response_schema:
+          "200": "{success: true, data: {orderId: string}}"
+          "400": "{success: false, error: string}"
+          "401": "{success: false, error: string}"
+      - method: POST
+        path: /actions/updateOrderStatus
+        description: Admin updates order status with valid transitions. Handles refunds on cancellation.
+        auth_required: true
+        request_schema:
+          body:
+            orderId: string
+            status: "CONFIRMED | PREPARING | READY | COMPLETED | CANCELLED"
+            cancellationReason: string (optional)
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+          "401": "{success: false, error: string}"
+          "403": "{success: false, error: string}"
+      - method: POST
+        path: /actions/cancelOrder
+        description: User cancels their own PENDING or CONFIRMED order. Refunds balance if applicable.
+        auth_required: true
+        request_schema:
+          body:
+            orderId: string
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+          "401": "{success: false, error: string}"
+    depends_on:
+      - Authentication
+      - Menu Management
+
+  - name: Menu Management
+    description: CRUD operations for menu items with photo upload, tenant-isolated
+    files:
+      - actions/menu.actions.ts
+      - lib/validations/menu.schema.ts
+    endpoints:
+      - method: POST
+        path: /actions/createMenu
+        description: Create a new menu item under admin's tenant
+        auth_required: true
+        request_schema:
+          body:
+            name: string (2-100 chars)
+            price: number (1000-1000000)
+            description: string (optional, max 500)
+            category: string (optional, max 50)
+            photoUrl: string (optional)
+        response_schema:
+          "200": "{success: true, data: {menuId: string}}"
+          "400": "{success: false, error: string}"
+      - method: POST
+        path: /actions/updateMenu
+        description: Update a menu item (partial update allowed)
+        auth_required: true
+        request_schema:
+          body:
+            menuId: string
+            name: string (optional)
+            price: number (optional)
+            description: string (optional)
+            category: string (optional)
+            photoUrl: string (optional)
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+      - method: POST
+        path: /actions/deleteMenu
+        description: Delete a menu item (blocked if active orders exist)
+        auth_required: true
+        request_schema:
+          body:
+            menuId: string
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+      - method: POST
+        path: /actions/toggleMenuAvailability
+        description: Toggle menu item availability on/off
+        auth_required: true
+        request_schema:
+          body:
+            menuId: string
+            isAvailable: boolean
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+    depends_on:
+      - Authentication
+
+  - name: Balance & Payment
+    description: Balance top-up via Midtrans, order payment tokens, balance history
+    files:
+      - actions/balance.actions.ts
+      - lib/midtrans.ts
+      - lib/validations/balance.schema.ts
+    endpoints:
+      - method: POST
+        path: /actions/createMidtransTopUpToken
+        description: Create a Midtrans Snap token for balance top-up
+        auth_required: true
+        request_schema:
+          body:
+            amount: number (10000-500000)
+        response_schema:
+          "200": "{success: true, data: {token: string, orderId: string}}"
+          "400": "{success: false, error: string}"
+      - method: POST
+        path: /actions/createMidtransOrderToken
+        description: Create a Midtrans Snap token for an existing MIDTRANS order
+        auth_required: true
+        request_schema:
+          body:
+            orderId: string
+        response_schema:
+          "200": "{success: true, data: {token: string}}"
+          "400": "{success: false, error: string}"
+      - method: POST
+        path: /actions/getBalanceHistory
+        description: Get user's balance transaction history (purchases, top-ups, refunds)
+        auth_required: true
+        response_schema:
+          "200": "{success: true, data: BalanceTransaction[]}"
+    depends_on:
+      - Authentication
+
+  - name: Midtrans Webhook
+    description: Handles payment notifications from Midtrans for order payments and balance top-ups
+    files:
+      - app/api/webhooks/midtrans/route.ts
+    endpoints:
+      - method: POST
+        path: /api/webhooks/midtrans
+        description: Receive and process Midtrans payment notifications. Verifies SHA512 signature, updates order/top-up status, credits balance.
+        auth_required: false
+        request_schema:
+          body:
+            transaction_status: string
+            order_id: string
+            status_code: string
+            gross_amount: string
+            signature_key: string
+            fraud_status: string (optional)
+            payment_type: string (optional)
+        response_schema:
+          "200": "{status: 'ok'}"
+          "401": "{error: 'Invalid signature'}"
+    depends_on:
+      - Order Management
+      - Balance & Payment
+
+  - name: Tenant Management
+    description: CRUD for tenants (canteens) by Super Admin with admin user creation
+    files:
+      - actions/tenant.actions.ts
+      - lib/validations/tenant.schema.ts
+    endpoints:
+      - method: POST
+        path: /actions/createTenant
+        description: Create a new tenant with admin user in a transaction
+        auth_required: true
+        request_schema:
+          body:
+            name: string (2-100 chars)
+            adminEmail: string
+            adminName: string (2-100 chars)
+            adminPassword: string (min 6 chars)
+            description: string (optional)
+        response_schema:
+          "200": "{success: true, data: {tenantId: string}}"
+          "403": "{success: false, error: string}"
+      - method: POST
+        path: /actions/updateTenant
+        description: Update tenant name or description
+        auth_required: true
+        request_schema:
+          body:
+            tenantId: string
+            name: string (optional)
+            description: string (optional)
+        response_schema:
+          "200": "{success: true}"
+      - method: POST
+        path: /actions/deleteTenant
+        description: Delete tenant with cascade (orders, menus, admin role reset)
+        auth_required: true
+        request_schema:
+          body:
+            tenantId: string
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+    depends_on:
+      - Authentication
+
+  - name: User Management
+    description: SUPER_ADMIN user listing, role updates, balance adjustments
+    files:
+      - actions/user.actions.ts
+      - lib/validations/user.schema.ts
+    endpoints:
+      - method: POST
+        path: /actions/getAllUsers
+        description: List all users with optional role filter and search
+        auth_required: true
+        request_schema:
+          body:
+            role: "USER | ADMIN | SUPER_ADMIN (optional)"
+            search: string (optional)
+        response_schema:
+          "200": "{success: true, data: User[]}"
+          "403": "{success: false, error: string}"
+      - method: POST
+        path: /actions/updateUserRole
+        description: Change a user's role (SUPER_ADMIN only)
+        auth_required: true
+        request_schema:
+          body:
+            userId: string
+            role: "USER | ADMIN | SUPER_ADMIN"
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+      - method: POST
+        path: /actions/adjustUserBalance
+        description: Manually increment or decrement user balance with reason
+        auth_required: true
+        request_schema:
+          body:
+            userId: string
+            amount: number (1-10000000)
+            type: "INCREMENT | DECREMENT"
+            reason: string (3-200 chars)
+        response_schema:
+          "200": "{success: true}"
+          "400": "{success: false, error: string}"
+    depends_on:
+      - Authentication
+
+  - name: Notifications
+    description: User notification management (read/unread)
+    files:
+      - actions/notification.actions.ts
+    endpoints:
+      - method: POST
+        path: /actions/getNotifications
+        description: Get user notifications with limit
+        auth_required: true
+        response_schema:
+          "200": "Notification[]"
+      - method: POST
+        path: /actions/markAsRead
+        description: Mark a single notification as read
+        auth_required: true
+        request_schema:
+          body:
+            notificationId: string
+        response_schema:
+          "200": "{success: true}"
+      - method: POST
+        path: /actions/markAllAsRead
+        description: Mark all unread notifications as read
+        auth_required: true
+        response_schema:
+          "200": "{success: true}"
+    depends_on:
+      - Authentication
+
+known_limitations:
+  - issue: Server Actions are not traditional REST endpoints - they are Next.js Server Actions invoked via POST with encrypted action IDs
+    location: actions/*.actions.ts
+    impact: Cannot be tested via standard HTTP calls without Next.js runtime. Only the webhook endpoint at /api/webhooks/midtrans is a true HTTP API route.
+  - issue: No rate limiting on authentication endpoints
+    location: actions/auth.actions.ts
+    impact: Potential brute-force vulnerability
+  - issue: File upload accepts up to 15MB input before compression
+    location: actions/menu.actions.ts
+    impact: Large uploads may cause memory pressure

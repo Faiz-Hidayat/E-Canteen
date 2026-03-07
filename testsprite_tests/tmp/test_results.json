@@ -1,0 +1,30 @@
+[
+  {
+    "projectId": "0dc20eb4-4cc2-47bd-a8c5-430a48d4943b",
+    "testId": "78d5013f-7fbe-4667-95e3-b8b4e0f5b4a8",
+    "userId": "c478b498-b041-7019-880c-a5bb105a03d5",
+    "title": "TC001-post api webhooks midtrans valid notification",
+    "description": "Test the /api/webhooks/midtrans endpoint with a valid Midtrans notification body and correct signature_key. Verify that the response is 200 with status 'ok' and that order or top-up statuses are updated accordingly and user balances are credited if applicable.",
+    "code": "import requests\n\ndef test_post_api_webhooks_midtrans_valid_notification():\n    base_url = \"http://localhost:3000\"\n    url = f\"{base_url}/api/webhooks/midtrans\"\n    timeout = 30\n\n    # Sample valid Midtrans notification body with all required fields.\n    # Note: signature_key likely invalid since MIDTRANS_SERVER_KEY unknown;\n    # but we focus on structure and response format.\n    payload = {\n        \"transaction_status\": \"capture\",\n        \"order_id\": \"order-12345\",\n        \"status_code\": \"200\",\n        \"gross_amount\": \"15000.00\",\n        \"signature_key\": \"validsignatureplaceholder1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef\",  # Dummy value\n        \"fraud_status\": \"accept\",\n        \"payment_type\": \"credit_card\"\n    }\n\n    try:\n        response = requests.post(url, json=payload, timeout=timeout)\n    except requests.RequestException as e:\n        assert False, f\"Request failed: {e}\"\n\n    # The server should respond with 200 and JSON {status:'ok'} if accepted.\n    assert response.status_code == 200, f\"Expected status code 200, got {response.status_code}\"\n    try:\n        resp_json = response.json()\n    except ValueError:\n        assert False, \"Response is not valid JSON\"\n\n    assert \"status\" in resp_json, \"Response JSON missing 'status' key\"\n    assert resp_json[\"status\"] == \"ok\", f\"Expected status 'ok', got {resp_json['status']}\"\n\ntest_post_api_webhooks_midtrans_valid_notification()",
+    "testStatus": "FAILED",
+    "testError": "Traceback (most recent call last):\n  File \"/var/task/handler.py\", line 258, in run_with_retry\n    exec(code, exec_env)\n  File \"<string>\", line 36, in <module>\n  File \"<string>\", line 27, in test_post_api_webhooks_midtrans_valid_notification\nAssertionError: Expected status code 200, got 403\n",
+    "testType": "BACKEND",
+    "createFrom": "mcp",
+    "created": "2026-03-07T13:12:30.239Z",
+    "modified": "2026-03-07T13:12:40.516Z"
+  },
+  {
+    "projectId": "0dc20eb4-4cc2-47bd-a8c5-430a48d4943b",
+    "testId": "490dcf85-ebb5-4b3c-a781-fb0e821a7c94",
+    "userId": "c478b498-b041-7019-880c-a5bb105a03d5",
+    "title": "TC002-post api webhooks midtrans invalid signature",
+    "description": "Test the /api/webhooks/midtrans endpoint with a Midtrans notification body but an invalid signature_key. Verify that the response is 401 with error 'Invalid signature' and no updates are made to orders, top-ups, or user balances.",
+    "code": "import requests\n\ndef test_post_api_webhooks_midtrans_invalid_signature():\n    url = \"http://localhost:3000/api/webhooks/midtrans\"\n    # Construct a Midtrans notification payload with an invalid signature_key\n    payload = {\n        \"transaction_status\": \"capture\",\n        \"order_id\": \"order-12345\",\n        \"status_code\": \"200\",\n        \"gross_amount\": \"10000.00\",\n        \"signature_key\": \"invalidsignaturekey\",\n        \"fraud_status\": \"accept\",\n        \"payment_type\": \"credit_card\"\n    }\n    headers = {\n        \"Content-Type\": \"application/json\"\n    }\n    try:\n        response = requests.post(url, json=payload, headers=headers, timeout=30)\n    except requests.RequestException as e:\n        assert False, f\"Request failed: {e}\"\n\n    # Assert HTTP status code 401 Unauthorized\n    assert response.status_code == 401, f\"Expected status code 401, got {response.status_code}\"\n\n    try:\n        json_response = response.json()\n    except ValueError:\n        assert False, \"Response is not valid JSON\"\n\n    # Assert response contains error 'Invalid signature'\n    assert \"error\" in json_response, \"Response JSON does not contain 'error' key\"\n    assert json_response[\"error\"].lower() == \"invalid signature\", f\"Expected error message 'Invalid signature', got '{json_response['error']}'\"\n\ntest_post_api_webhooks_midtrans_invalid_signature()",
+    "testStatus": "FAILED",
+    "testError": "Traceback (most recent call last):\n  File \"/var/task/handler.py\", line 258, in run_with_retry\n    exec(code, exec_env)\n  File \"<string>\", line 35, in <module>\n  File \"<string>\", line 24, in test_post_api_webhooks_midtrans_invalid_signature\nAssertionError: Expected status code 401, got 403\n",
+    "testType": "BACKEND",
+    "createFrom": "mcp",
+    "created": "2026-03-07T13:12:30.244Z",
+    "modified": "2026-03-07T13:12:40.731Z"
+  }
+]

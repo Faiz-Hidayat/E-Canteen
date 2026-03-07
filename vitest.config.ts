@@ -9,6 +9,16 @@ export default defineConfig({
     setupFiles: ["./__tests__/setup.ts"],
     include: ["__tests__/**/*.test.{ts,tsx}"],
     globals: true,
+    coverage: {
+      provider: "v8",
+      include: [
+        "lib/validations/**",
+        "lib/utils/**",
+        "actions/**",
+      ],
+      reporter: ["text", "html"],
+      all: true,
+    },
   },
   resolve: {
     alias: {
