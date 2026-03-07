@@ -37,7 +37,7 @@ function ensureCleanup() {
   }, 60_000);
 
   // Don't prevent Node from exiting
-  if (cleanupInterval && typeof cleanupInterval === "object" && "unref" in cleanupInterval) {
+  if (cleanupInterval && typeof cleanupInterval === 'object' && 'unref' in cleanupInterval) {
     cleanupInterval.unref();
   }
 }

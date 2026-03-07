@@ -1,22 +1,20 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { hash } from "bcryptjs";
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+import { hash } from 'bcryptjs';
 import {
   CreateTenantSchema,
   UpdateTenantSchema,
   DeleteTenantSchema,
   type CreateTenantInput,
   type UpdateTenantInput,
-} from "@/lib/validations/tenant.schema";
+} from '@/lib/validations/tenant.schema';
 
 // ── Types ──────────────────────────────────────────────────
 
-type ActionResult<T = null> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+type ActionResult<T = null> = { success: true; data: T } | { success: false; error: string };
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -24,24 +22,24 @@ function slugify(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 // ── createTenant ───────────────────────────────────────────
 
 export async function createTenant(
-  input: CreateTenantInput
+  input: CreateTenantInput,
 ): Promise<ActionResult<{ tenantId: string; adminId: string }>> {
   // 1. Auth + RBAC
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
-  if (session.user.role !== "SUPER_ADMIN") {
-    return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Akses ditolak. Hanya Super Admin yang bisa melakukan ini.' };
   }
 
   // 2. Zod validation
@@ -49,7 +47,7 @@ export async function createTenant(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Data tidak valid.",
+      error: parsed.error.issues[0]?.message ?? 'Data tidak valid.',
     };
   }
 
@@ -62,7 +60,7 @@ export async function createTenant(
       select: { id: true },
     });
     if (existingUser) {
-      return { success: false, error: "Email admin sudah terdaftar." };
+      return { success: false, error: 'Email admin sudah terdaftar.' };
     }
 
     // 4. Generate slug
@@ -84,7 +82,7 @@ export async function createTenant(
           name: adminName,
           email: adminEmail,
           password: hashedPassword,
-          role: "ADMIN",
+          role: 'ADMIN',
         },
       });
 
@@ -100,34 +98,32 @@ export async function createTenant(
       return { tenantId: tenant.id, adminId: admin.id };
     });
 
-    revalidatePath("/super-admin/tenants");
-    revalidatePath("/super-admin");
+    revalidatePath('/super-admin/tenants');
+    revalidatePath('/super-admin');
 
     return { success: true, data: result };
   } catch (err) {
-    console.error("[createTenant]", {
+    console.error('[createTenant]', {
       timestamp: new Date().toISOString(),
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: err instanceof Error ? err.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal membuat stan baru. Coba lagi ya.",
+      error: 'Gagal membuat stan baru. Coba lagi ya.',
     };
   }
 }
 
 // ── updateTenant ───────────────────────────────────────────
 
-export async function updateTenant(
-  input: UpdateTenantInput
-): Promise<ActionResult> {
+export async function updateTenant(input: UpdateTenantInput): Promise<ActionResult> {
   // 1. Auth + RBAC
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
-  if (session.user.role !== "SUPER_ADMIN") {
-    return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Akses ditolak. Hanya Super Admin yang bisa melakukan ini.' };
   }
 
   // 2. Zod validation
@@ -135,7 +131,7 @@ export async function updateTenant(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Data tidak valid.",
+      error: parsed.error.issues[0]?.message ?? 'Data tidak valid.',
     };
   }
 
@@ -148,7 +144,7 @@ export async function updateTenant(
       select: { id: true },
     });
     if (!tenant) {
-      return { success: false, error: "Stan tidak ditemukan." };
+      return { success: false, error: 'Stan tidak ditemukan.' };
     }
 
     // 4. Update
@@ -166,41 +162,39 @@ export async function updateTenant(
       data,
     });
 
-    revalidatePath("/super-admin/tenants");
-    revalidatePath("/super-admin");
+    revalidatePath('/super-admin/tenants');
+    revalidatePath('/super-admin');
 
     return { success: true, data: null };
   } catch (err) {
-    console.error("[updateTenant]", {
+    console.error('[updateTenant]', {
       tenantId,
       timestamp: new Date().toISOString(),
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: err instanceof Error ? err.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal mengupdate stan. Coba lagi ya.",
+      error: 'Gagal mengupdate stan. Coba lagi ya.',
     };
   }
 }
 
 // ── deleteTenant ───────────────────────────────────────────
 
-export async function deleteTenant(
-  tenantId: string
-): Promise<ActionResult> {
+export async function deleteTenant(tenantId: string): Promise<ActionResult> {
   // 1. Auth + RBAC
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
-  if (session.user.role !== "SUPER_ADMIN") {
-    return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Akses ditolak. Hanya Super Admin yang bisa melakukan ini.' };
   }
 
   // 2. Zod validation
   const parsed = DeleteTenantSchema.safeParse({ tenantId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Data tidak valid.' };
   }
 
   try {
@@ -220,14 +214,14 @@ export async function deleteTenant(
     });
 
     if (!tenant) {
-      return { success: false, error: "Stan tidak ditemukan." };
+      return { success: false, error: 'Stan tidak ditemukan.' };
     }
 
     // 3. Check active orders (non-completed/cancelled)
     const activeOrders = await prisma.order.count({
       where: {
         tenant_id: tenantId,
-        status: { in: ["PENDING", "CONFIRMED", "PREPARING", "READY"] },
+        status: { in: ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] },
       },
     });
 
@@ -263,24 +257,24 @@ export async function deleteTenant(
       // Reset admin user role to USER (don't delete the user)
       await tx.user.update({
         where: { id: tenant.admin_id },
-        data: { role: "USER" },
+        data: { role: 'USER' },
       });
     });
 
-    revalidatePath("/super-admin/tenants");
-    revalidatePath("/super-admin");
-    revalidatePath("/super-admin/users");
+    revalidatePath('/super-admin/tenants');
+    revalidatePath('/super-admin');
+    revalidatePath('/super-admin/users');
 
     return { success: true, data: null };
   } catch (err) {
-    console.error("[deleteTenant]", {
+    console.error('[deleteTenant]', {
       tenantId,
       timestamp: new Date().toISOString(),
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: err instanceof Error ? err.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal menghapus stan. Coba lagi ya.",
+      error: 'Gagal menghapus stan. Coba lagi ya.',
     };
   }
 }

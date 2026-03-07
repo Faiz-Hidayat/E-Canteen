@@ -1,10 +1,10 @@
-import { PrismaClient, Role, PickupTime, PaymentMethod, OrderStatus } from "@prisma/client";
-import { hash } from "bcryptjs";
+import { PrismaClient, Role, PickupTime, PaymentMethod, OrderStatus } from '@prisma/client';
+import { hash } from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log('🌱 Seeding database...');
 
   // ── Clean existing data (order matters for FK constraints) ──
   await prisma.orderItem.deleteMany();
@@ -15,14 +15,14 @@ async function main() {
 
   // ── 1. Create Users ──────────────────────────────────────────
 
-  const superAdminPassword = await hash("superadmin123", 12);
-  const adminPassword = await hash("admin123", 12);
-  const studentPassword = await hash("student123", 12);
+  const superAdminPassword = await hash('superadmin123', 12);
+  const adminPassword = await hash('admin123', 12);
+  const studentPassword = await hash('student123', 12);
 
   const superAdmin = await prisma.user.create({
     data: {
-      name: "Super Admin",
-      email: "superadmin@ecanteen.sch.id",
+      name: 'Super Admin',
+      email: 'superadmin@ecanteen.sch.id',
       password: superAdminPassword,
       role: Role.SUPER_ADMIN,
       balance: 0,
@@ -32,8 +32,8 @@ async function main() {
 
   const adminBuAni = await prisma.user.create({
     data: {
-      name: "Bu Ani",
-      email: "buani@ecanteen.sch.id",
+      name: 'Bu Ani',
+      email: 'buani@ecanteen.sch.id',
       password: adminPassword,
       role: Role.ADMIN,
       balance: 0,
@@ -42,8 +42,8 @@ async function main() {
 
   const adminPakJoko = await prisma.user.create({
     data: {
-      name: "Pak Joko",
-      email: "pakjoko@ecanteen.sch.id",
+      name: 'Pak Joko',
+      email: 'pakjoko@ecanteen.sch.id',
       password: adminPassword,
       role: Role.ADMIN,
       balance: 0,
@@ -53,8 +53,8 @@ async function main() {
 
   const arya = await prisma.user.create({
     data: {
-      name: "Arya Pratama",
-      email: "arya@student.sch.id",
+      name: 'Arya Pratama',
+      email: 'arya@student.sch.id',
       password: studentPassword,
       role: Role.USER,
       balance: 50000,
@@ -63,8 +63,8 @@ async function main() {
 
   const siti = await prisma.user.create({
     data: {
-      name: "Siti Nurhaliza",
-      email: "siti@student.sch.id",
+      name: 'Siti Nurhaliza',
+      email: 'siti@student.sch.id',
       password: studentPassword,
       role: Role.USER,
       balance: 75000,
@@ -73,8 +73,8 @@ async function main() {
 
   const budi = await prisma.user.create({
     data: {
-      name: "Budi Santoso",
-      email: "budi@student.sch.id",
+      name: 'Budi Santoso',
+      email: 'budi@student.sch.id',
       password: studentPassword,
       role: Role.USER,
       balance: 30000,
@@ -86,18 +86,18 @@ async function main() {
 
   const tenantBuAni = await prisma.tenant.create({
     data: {
-      name: "Warung Bu Ani",
-      slug: "warung-bu-ani",
-      description: "Masakan rumahan yang bikin kangen rumah",
+      name: 'Warung Bu Ani',
+      slug: 'warung-bu-ani',
+      description: 'Masakan rumahan yang bikin kangen rumah',
       admin_id: adminBuAni.id,
     },
   });
 
   const tenantPakJoko = await prisma.tenant.create({
     data: {
-      name: "Kedai Pak Joko",
-      slug: "kedai-pak-joko",
-      description: "Sarapan dan jajanan favorit anak sekolah",
+      name: 'Kedai Pak Joko',
+      slug: 'kedai-pak-joko',
+      description: 'Sarapan dan jajanan favorit anak sekolah',
       admin_id: adminPakJoko.id,
     },
   });
@@ -108,10 +108,10 @@ async function main() {
   const nasiGoreng = await prisma.menu.create({
     data: {
       tenant_id: tenantBuAni.id,
-      name: "Nasi Goreng",
-      description: "Nasi goreng spesial dengan telur dan kerupuk",
+      name: 'Nasi Goreng',
+      description: 'Nasi goreng spesial dengan telur dan kerupuk',
       price: 15000,
-      category: "Makanan Berat",
+      category: 'Makanan Berat',
       is_available: true,
     },
   });
@@ -119,10 +119,10 @@ async function main() {
   const mieAyam = await prisma.menu.create({
     data: {
       tenant_id: tenantBuAni.id,
-      name: "Mie Ayam",
-      description: "Mie ayam dengan topping ayam cincang dan pangsit",
+      name: 'Mie Ayam',
+      description: 'Mie ayam dengan topping ayam cincang dan pangsit',
       price: 13000,
-      category: "Makanan Berat",
+      category: 'Makanan Berat',
       is_available: true,
     },
   });
@@ -130,10 +130,10 @@ async function main() {
   const esTehManis = await prisma.menu.create({
     data: {
       tenant_id: tenantBuAni.id,
-      name: "Es Teh Manis",
-      description: "Teh manis dingin segar",
+      name: 'Es Teh Manis',
+      description: 'Teh manis dingin segar',
       price: 5000,
-      category: "Minuman",
+      category: 'Minuman',
       is_available: true,
     },
   });
@@ -141,10 +141,10 @@ async function main() {
   const gorengan = await prisma.menu.create({
     data: {
       tenant_id: tenantBuAni.id,
-      name: "Gorengan",
-      description: "Aneka gorengan: bakwan, tahu, tempe",
+      name: 'Gorengan',
+      description: 'Aneka gorengan: bakwan, tahu, tempe',
       price: 3000,
-      category: "Snack",
+      category: 'Snack',
       is_available: true,
     },
   });
@@ -152,10 +152,10 @@ async function main() {
   await prisma.menu.create({
     data: {
       tenant_id: tenantPakJoko.id,
-      name: "Nasi Uduk",
-      description: "Nasi uduk komplit dengan lauk pilihan",
+      name: 'Nasi Uduk',
+      description: 'Nasi uduk komplit dengan lauk pilihan',
       price: 12000,
-      category: "Makanan Berat",
+      category: 'Makanan Berat',
       is_available: true,
     },
   });
@@ -163,10 +163,10 @@ async function main() {
   const sotoAyam = await prisma.menu.create({
     data: {
       tenant_id: tenantPakJoko.id,
-      name: "Soto Ayam",
-      description: "Soto ayam kuah bening dengan nasi",
+      name: 'Soto Ayam',
+      description: 'Soto ayam kuah bening dengan nasi',
       price: 14000,
-      category: "Makanan Berat",
+      category: 'Makanan Berat',
       is_available: true,
     },
   });
@@ -174,10 +174,10 @@ async function main() {
   const jusJeruk = await prisma.menu.create({
     data: {
       tenant_id: tenantPakJoko.id,
-      name: "Jus Jeruk",
-      description: "Jus jeruk segar tanpa pemanis buatan",
+      name: 'Jus Jeruk',
+      description: 'Jus jeruk segar tanpa pemanis buatan',
       price: 8000,
-      category: "Minuman",
+      category: 'Minuman',
       is_available: true,
     },
   });
@@ -185,15 +185,15 @@ async function main() {
   await prisma.menu.create({
     data: {
       tenant_id: tenantPakJoko.id,
-      name: "Roti Bakar",
-      description: "Roti bakar dengan selai coklat dan keju",
+      name: 'Roti Bakar',
+      description: 'Roti bakar dengan selai coklat dan keju',
       price: 10000,
-      category: "Snack",
+      category: 'Snack',
       is_available: true,
     },
   });
 
-  console.log("  ✅ Menus: 8 items created (4 per tenant)");
+  console.log('  ✅ Menus: 8 items created (4 per tenant)');
 
   // ── 4. Create Sample Orders ──────────────────────────────────
 
@@ -206,7 +206,7 @@ async function main() {
       pickup_time: PickupTime.BREAK_1,
       payment_method: PaymentMethod.BALANCE,
       status: OrderStatus.PENDING,
-      notes: "Bang sambelnya banyakin ya",
+      notes: 'Bang sambelnya banyakin ya',
       orderItems: {
         create: [
           {
@@ -259,7 +259,7 @@ async function main() {
       pickup_time: PickupTime.BREAK_1,
       payment_method: PaymentMethod.BALANCE,
       status: OrderStatus.READY,
-      notes: "Mie ayamnya pisah ya",
+      notes: 'Mie ayamnya pisah ya',
       orderItems: {
         create: [
           {
@@ -282,7 +282,7 @@ async function main() {
   console.log(`     - Order 2 (${order2.id}): Siti @ Pak Joko — PREPARING`);
   console.log(`     - Order 3 (${order3.id}): Budi @ Bu Ani — READY`);
 
-  console.log("\n🎉 Seeding selesai!");
+  console.log('\n🎉 Seeding selesai!');
 }
 
 main()
@@ -290,7 +290,7 @@ main()
     await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error("❌ Seed error:", e);
+    console.error('❌ Seed error:', e);
     await prisma.$disconnect();
     process.exit(1);
   });

@@ -1,23 +1,15 @@
-"use client";
+'use client';
 
-import { useRef, useState, useTransition } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  UtensilsCrossed,
-  Loader2,
-  ImageIcon,
-  Upload,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useRef, useState, useTransition } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Pencil, Trash2, UtensilsCrossed, Loader2, ImageIcon, Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -25,17 +17,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  createMenu,
-  updateMenu,
-  deleteMenu,
-  toggleMenuAvailability,
-  uploadMenuPhoto,
-} from "@/actions/menu.actions";
-import { formatRupiah } from "@/lib/utils/format";
-import { playfulToast } from "@/lib/toast";
-import type { AdminMenuItem } from "@/app/(backoffice)/admin/menus/page";
+} from '@/components/ui/dialog';
+import { createMenu, updateMenu, deleteMenu, toggleMenuAvailability, uploadMenuPhoto } from '@/actions/menu.actions';
+import { formatRupiah } from '@/lib/utils/format';
+import { playfulToast } from '@/lib/toast';
+import type { AdminMenuItem } from '@/app/(backoffice)/admin/menus/page';
 
 // ── Menu Form ──────────────────────────────────────────────
 
@@ -48,20 +34,20 @@ interface MenuFormData {
 }
 
 const EMPTY_FORM: MenuFormData = {
-  name: "",
-  description: "",
-  price: "",
-  category: "",
-  photoUrl: "",
+  name: '',
+  description: '',
+  price: '',
+  category: '',
+  photoUrl: '',
 };
 
 function mapEditItemToForm(item: AdminMenuItem): MenuFormData {
   return {
     name: item.name,
-    description: item.description ?? "",
+    description: item.description ?? '',
     price: String(item.price),
-    category: item.category ?? "",
-    photoUrl: item.photoUrl ?? "",
+    category: item.category ?? '',
+    photoUrl: item.photoUrl ?? '',
   };
 }
 
@@ -74,9 +60,7 @@ function MenuFormDialog({
   onOpenChange: (open: boolean) => void;
   editItem: AdminMenuItem | null;
 }) {
-  const [form, setForm] = useState<MenuFormData>(
-    editItem ? mapEditItemToForm(editItem) : EMPTY_FORM
-  );
+  const [form, setForm] = useState<MenuFormData>(editItem ? mapEditItemToForm(editItem) : EMPTY_FORM);
   const [isPending, startTransition] = useTransition();
   const [isUploadPending, startUploadTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -91,7 +75,7 @@ function MenuFormDialog({
 
     startUploadTransition(async () => {
       const payload = new FormData();
-      payload.append("file", file);
+      payload.append('file', file);
 
       const result = await uploadMenuPhoto(payload);
       if (!result.success) {
@@ -101,7 +85,7 @@ function MenuFormDialog({
 
       setForm((prev) => ({ ...prev, photoUrl: result.data.photoUrl }));
       setIsPreviewBroken(false);
-      playfulToast.success("Foto berhasil diupload.");
+      playfulToast.success('Foto berhasil diupload.');
     });
   };
 
@@ -120,7 +104,7 @@ function MenuFormDialog({
 
     const priceNum = Number(form.price);
     if (isNaN(priceNum) || priceNum < 1000) {
-      setErrors({ price: "Harga minimal Rp 1.000 ya." });
+      setErrors({ price: 'Harga minimal Rp 1.000 ya.' });
       return;
     }
 
@@ -135,7 +119,7 @@ function MenuFormDialog({
           photoUrl: form.photoUrl || undefined,
         });
         if (result.success) {
-          playfulToast.success("Menu berhasil diperbarui! ✏️");
+          playfulToast.success('Menu berhasil diperbarui! ✏️');
           onOpenChange(false);
         } else {
           playfulToast.error(result.error);
@@ -149,7 +133,7 @@ function MenuFormDialog({
           photoUrl: form.photoUrl || undefined,
         });
         if (result.success) {
-          playfulToast.success("Menu baru berhasil ditambahkan! 🎉");
+          playfulToast.success('Menu baru berhasil ditambahkan! 🎉');
           onOpenChange(false);
         } else {
           playfulToast.error(result.error);
@@ -162,11 +146,9 @@ function MenuFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Menu" : "Tambah Menu Baru"}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit Menu' : 'Tambah Menu Baru'}</DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "Ubah detail menu di bawah ini."
-              : "Isi detail menu baru untuk stan kamu."}
+            {isEdit ? 'Ubah detail menu di bawah ini.' : 'Isi detail menu baru untuk stan kamu.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -198,14 +180,10 @@ function MenuFormDialog({
               min={1000}
               max={1000000}
               value={form.price}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, price: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
               required
             />
-            {errors.price && (
-              <p className="text-xs text-red-500">{errors.price}</p>
-            )}
+            {errors.price && <p className="text-xs text-red-500">{errors.price}</p>}
           </div>
 
           {/* Description */}
@@ -215,9 +193,7 @@ function MenuFormDialog({
               id="menu-desc"
               placeholder="Nasi goreng dengan telur, ayam, dan sayuran segar..."
               value={form.description}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, description: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               maxLength={500}
             />
           </div>
@@ -229,9 +205,7 @@ function MenuFormDialog({
               id="menu-category"
               placeholder="Makanan Berat, Minuman, Snack..."
               value={form.category}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, category: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               maxLength={50}
             />
           </div>
@@ -273,7 +247,7 @@ function MenuFormDialog({
               )}
 
               <div
-                className={`hidden rounded-md border border-dashed p-4 text-center md:block ${isDraggingPhoto ? "border-primary bg-primary/5" : "border-border bg-muted/20"}`}
+                className={`hidden rounded-md border border-dashed p-4 text-center md:block ${isDraggingPhoto ? 'border-primary bg-primary/5' : 'border-border bg-muted/20'}`}
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -289,20 +263,16 @@ function MenuFormDialog({
                   e.stopPropagation();
                   setIsDraggingPhoto(false);
                 }}
-                onDrop={handlePhotoDrop}
-              >
+                onDrop={handlePhotoDrop}>
                 <div className="flex flex-col items-center gap-2">
                   <Upload className="size-5 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Drag & drop foto ke sini
-                  </p>
+                  <p className="text-sm text-muted-foreground">Drag & drop foto ke sini</p>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadPending}
-                  >
+                    disabled={isUploadPending}>
                     Pilih File
                   </Button>
                 </div>
@@ -318,7 +288,7 @@ function MenuFormDialog({
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null;
                   handlePhotoUpload(file);
-                  e.currentTarget.value = "";
+                  e.currentTarget.value = '';
                 }}
               />
               <Input
@@ -330,27 +300,18 @@ function MenuFormDialog({
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null;
                   handlePhotoUpload(file);
-                  e.currentTarget.value = "";
+                  e.currentTarget.value = '';
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Format JPG/PNG/WEBP. File besar otomatis dikompres supaya tetap
-                jernih.
+                Format JPG/PNG/WEBP. File besar otomatis dikompres supaya tetap jernih.
               </p>
-              {isUploadPending && (
-                <p className="text-xs text-muted-foreground">
-                  Lagi upload dan kompres foto...
-                </p>
-              )}
+              {isUploadPending && <p className="text-xs text-muted-foreground">Lagi upload dan kompres foto...</p>}
             </div>
           </div>
 
           <DialogFooter>
-            <Button
-              type="submit"
-              disabled={isPending || isUploadPending}
-              className="w-full gap-2"
-            >
+            <Button type="submit" disabled={isPending || isUploadPending} className="w-full gap-2">
               {isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : isEdit ? (
@@ -358,7 +319,7 @@ function MenuFormDialog({
               ) : (
                 <Plus className="size-4" />
               )}
-              {isEdit ? "Simpan Perubahan" : "Tambah Menu"}
+              {isEdit ? 'Simpan Perubahan' : 'Tambah Menu'}
             </Button>
           </DialogFooter>
         </form>
@@ -385,7 +346,7 @@ function DeleteDialog({
     startTransition(async () => {
       const result = await deleteMenu({ menuId: item.id });
       if (result.success) {
-        playfulToast.success("Menu berhasil dihapus.");
+        playfulToast.success('Menu berhasil dihapus.');
         onOpenChange(false);
       } else {
         playfulToast.error(result.error);
@@ -399,29 +360,15 @@ function DeleteDialog({
         <DialogHeader>
           <DialogTitle>Hapus Menu?</DialogTitle>
           <DialogDescription>
-            Yakin mau hapus <strong>{item?.name}</strong>? Aksi ini tidak bisa
-            dibatalkan.
+            Yakin mau hapus <strong>{item?.name}</strong>? Aksi ini tidak bisa dibatalkan.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Batal
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isPending}
-            className="gap-1.5"
-          >
-            {isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Trash2 className="size-4" />
-            )}
+          <Button variant="destructive" onClick={handleDelete} disabled={isPending} className="gap-1.5">
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
             Hapus
           </Button>
         </DialogFooter>
@@ -450,11 +397,7 @@ function AdminMenuCard({
         isAvailable: checked,
       });
       if (result.success) {
-        playfulToast.success(
-          checked
-            ? "Menu ditampilkan ke pembeli! 🟢"
-            : "Menu disembunyikan. 🔴",
-        );
+        playfulToast.success(checked ? 'Menu ditampilkan ke pembeli! 🟢' : 'Menu disembunyikan. 🔴');
       } else {
         playfulToast.error(result.error);
       }
@@ -467,20 +410,13 @@ function AdminMenuCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Card
-        className={`overflow-hidden p-0 transition-opacity ${!item.isAvailable ? "opacity-60" : ""}`}
-      >
+      transition={{ duration: 0.2 }}>
+      <Card className={`overflow-hidden p-0 transition-opacity ${!item.isAvailable ? 'opacity-60' : ''}`}>
         {/* Thumbnail */}
         <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
           {item.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.photoUrl}
-              alt={item.name}
-              className="h-full w-full object-cover"
-            />
+            <img src={item.photoUrl} alt={item.name} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <ImageIcon className="size-8 text-gray-300" />
@@ -488,10 +424,7 @@ function AdminMenuCard({
           )}
           {/* Category badge */}
           {item.category && (
-            <Badge
-              variant="secondary"
-              className="absolute top-2 left-2 bg-white/90 text-[10px] backdrop-blur-sm"
-            >
+            <Badge variant="secondary" className="absolute top-2 left-2 bg-white/90 text-[10px] backdrop-blur-sm">
               {item.category}
             </Badge>
           )}
@@ -501,40 +434,21 @@ function AdminMenuCard({
         <div className="space-y-2 p-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">
-                {item.name}
-              </p>
-              <p className="text-sm font-bold text-[#FFB26B]">
-                {formatRupiah(item.price)}
-              </p>
+              <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
+              <p className="text-sm font-bold text-[#FFB26B]">{formatRupiah(item.price)}</p>
             </div>
             {/* Availability toggle */}
             <div className="flex flex-col items-center gap-0.5">
-              <Switch
-                checked={item.isAvailable}
-                onCheckedChange={handleToggle}
-                disabled={isPending}
-              />
-              <span className="text-[10px] text-muted-foreground">
-                {item.isAvailable ? "Aktif" : "Mati"}
-              </span>
+              <Switch checked={item.isAvailable} onCheckedChange={handleToggle} disabled={isPending} />
+              <span className="text-[10px] text-muted-foreground">{item.isAvailable ? 'Aktif' : 'Mati'}</span>
             </div>
           </div>
 
-          {item.description && (
-            <p className="line-clamp-2 text-xs text-muted-foreground">
-              {item.description}
-            </p>
-          )}
+          {item.description && <p className="line-clamp-2 text-xs text-muted-foreground">{item.description}</p>}
 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 gap-1.5 text-xs"
-              onClick={() => onEdit(item)}
-            >
+            <Button size="sm" variant="outline" className="flex-1 gap-1.5 text-xs" onClick={() => onEdit(item)}>
               <Pencil className="size-3" />
               Edit
             </Button>
@@ -543,8 +457,7 @@ function AdminMenuCard({
               variant="outline"
               className="gap-1.5 text-xs text-red-500 hover:bg-red-50 hover:text-red-600"
               onClick={() => onDelete(item)}
-              aria-label={`Hapus ${item.name}`}
-            >
+              aria-label={`Hapus ${item.name}`}>
               <Trash2 className="size-3" />
             </Button>
           </div>
@@ -588,45 +501,26 @@ export function AdminMenuList({ menus }: AdminMenuListProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-16 text-center"
-        >
+          className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-16 text-center">
           <UtensilsCrossed className="size-10 text-gray-300" />
-          <p className="mt-3 text-sm font-medium text-muted-foreground">
-            Belum ada menu di stan kamu.
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Klik tombol &quot;Tambah Menu Baru&quot; untuk mulai.
-          </p>
+          <p className="mt-3 text-sm font-medium text-muted-foreground">Belum ada menu di stan kamu.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Klik tombol &quot;Tambah Menu Baru&quot; untuk mulai.</p>
         </motion.div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {menus.map((item) => (
-              <AdminMenuCard
-                key={item.id}
-                item={item}
-                onEdit={handleEdit}
-                onDelete={setDeleteItem}
-              />
+              <AdminMenuCard key={item.id} item={item} onEdit={handleEdit} onDelete={setDeleteItem} />
             ))}
           </AnimatePresence>
         </div>
       )}
 
       {/* Form Dialog */}
-      <MenuFormDialog
-        key={editItem?.id ?? 'new'}
-        open={showForm}
-        onOpenChange={handleCloseForm}
-        editItem={editItem}
-      />
+      <MenuFormDialog key={editItem?.id ?? 'new'} open={showForm} onOpenChange={handleCloseForm} editItem={editItem} />
 
       {/* Delete Dialog */}
-      <DeleteDialog
-        open={!!deleteItem}
-        onOpenChange={(open) => !open && setDeleteItem(null)}
-        item={deleteItem}
-      />
+      <DeleteDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)} item={deleteItem} />
     </div>
   );
 }

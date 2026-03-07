@@ -1,17 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, CheckCheck, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import {
-  getNotifications,
-  getUnreadCount,
-  markAsRead,
-  markAllAsRead,
-} from "@/actions/notification.actions";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, Check, CheckCheck, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from '@/actions/notification.actions';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -30,7 +25,7 @@ interface NotificationItem {
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return "Baru saja";
+  if (minutes < 1) return 'Baru saja';
   if (minutes < 60) return `${minutes} menit lalu`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} jam lalu`;
@@ -40,14 +35,14 @@ function timeAgo(iso: string): string {
 
 function notifIcon(type: string): string {
   switch (type) {
-    case "ORDER_CANCELLED_BY_ADMIN":
-      return "❌";
-    case "ORDER_READY":
-      return "🍽️";
-    case "ORDER_CONFIRMED":
-      return "✅";
+    case 'ORDER_CANCELLED_BY_ADMIN':
+      return '❌';
+    case 'ORDER_READY':
+      return '🍽️';
+    case 'ORDER_CONFIRMED':
+      return '✅';
     default:
-      return "🔔";
+      return '🔔';
   }
 }
 
@@ -131,16 +126,14 @@ export function NotificationBell() {
       }
     }
     if (isOpen) {
-      document.addEventListener("mousedown", handleClick);
-      return () => document.removeEventListener("mousedown", handleClick);
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
     }
   }, [isOpen]);
 
   const handleMarkRead = async (id: string) => {
     await markAsRead(id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
 
@@ -155,144 +148,124 @@ export function NotificationBell() {
       await handleMarkRead(notif.id);
     }
     if (notif.orderId) {
-      router.push("/orders");
+      router.push('/orders');
       router.refresh();
     }
     setIsOpen(false);
   };
 
   return (
-      <div className="relative" ref={panelRef}>
-        {/* Bell Button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Notifikasi"
-        >
-          <Bell className="h-5 w-5" />
+    <div className="relative" ref={panelRef}>
+      {/* Bell Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label="Notifikasi">
+        <Bell className="h-5 w-5" />
 
-          {/* Unread badge */}
-          <AnimatePresence>
-            {unreadCount > 0 && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
-              >
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
-
-        {/* Dropdown panel */}
+        {/* Unread badge */}
         <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-                <h3 className="text-sm font-extrabold text-gray-800">
-                  Notifikasi
-                </h3>
-                <div className="flex items-center gap-1.5">
-                  {unreadCount > 0 && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                      onClick={handleMarkAllRead}
-                    >
-                      <CheckCheck className="size-3" />
-                      Baca Semua
-                    </Button>
-                  )}
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* List */}
-              <div className="max-h-80 overflow-y-auto">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-10 text-center">
-                    <span className="text-2xl">🔕</span>
-                    <p className="text-xs text-muted-foreground">
-                      Belum ada notifikasi
-                    </p>
-                  </div>
-                ) : (
-                  notifications.map((notif) => (
-                    <div
-                      key={notif.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleNotifClick(notif)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleNotifClick(notif); }}
-                      className={cn(
-                        "flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50",
-                        !notif.isRead && "bg-primary/5"
-                      )}
-                    >
-                      <span className="mt-0.5 text-base">
-                        {notifIcon(notif.type)}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p
-                            className={cn(
-                              "truncate text-xs font-bold",
-                              notif.isRead
-                                ? "text-gray-500"
-                                : "text-gray-800"
-                            )}
-                          >
-                            {notif.title}
-                          </p>
-                          {!notif.isRead && (
-                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                          )}
-                        </div>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                          {notif.message}
-                        </p>
-                        <p className="mt-1 text-[10px] text-gray-400">
-                          {timeAgo(notif.createdAt)}
-                        </p>
-                      </div>
-                      {!notif.isRead && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMarkRead(notif.id);
-                          }}
-                          className="mt-1 rounded-full p-1 text-muted-foreground hover:bg-gray-200 hover:text-foreground"
-                          title="Tandai sudah dibaca"
-                        >
-                          <Check className="size-3" />
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </motion.div>
+          {unreadCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </motion.span>
           )}
         </AnimatePresence>
-      </div>
+      </button>
+
+      {/* Dropdown panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <h3 className="text-sm font-extrabold text-gray-800">Notifikasi</h3>
+              <div className="flex items-center gap-1.5">
+                {unreadCount > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                    onClick={handleMarkAllRead}>
+                    <CheckCheck className="size-3" />
+                    Baca Semua
+                  </Button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* List */}
+            <div className="max-h-80 overflow-y-auto">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-center">
+                  <span className="text-2xl">🔕</span>
+                  <p className="text-xs text-muted-foreground">Belum ada notifikasi</p>
+                </div>
+              ) : (
+                notifications.map((notif) => (
+                  <div
+                    key={notif.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleNotifClick(notif)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleNotifClick(notif);
+                    }}
+                    className={cn(
+                      'flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50',
+                      !notif.isRead && 'bg-primary/5',
+                    )}>
+                    <span className="mt-0.5 text-base">{notifIcon(notif.type)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={cn(
+                            'truncate text-xs font-bold',
+                            notif.isRead ? 'text-gray-500' : 'text-gray-800',
+                          )}>
+                          {notif.title}
+                        </p>
+                        {!notif.isRead && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                      </div>
+                      <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{notif.message}</p>
+                      <p className="mt-1 text-[10px] text-gray-400">{timeAgo(notif.createdAt)}</p>
+                    </div>
+                    {!notif.isRead && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkRead(notif.id);
+                        }}
+                        className="mt-1 rounded-full p-1 text-muted-foreground hover:bg-gray-200 hover:text-foreground"
+                        title="Tandai sudah dibaca">
+                        <Check className="size-3" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

@@ -1,22 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useTransition } from "react";
-import {
-  Plus,
-  Trash2,
-  Pencil,
-  Store,
-  Loader2,
-  UtensilsCrossed,
-  ShoppingBag,
-  User,
-  Mail,
-  Calendar,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useState, useTransition } from 'react';
+import { Plus, Trash2, Pencil, Store, Loader2, UtensilsCrossed, ShoppingBag, User, Mail, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -24,15 +13,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import {
-
-  createTenant,
-  updateTenant,
-  deleteTenant,
-} from "@/actions/tenant.actions";
-import { playfulToast } from "@/lib/toast";
-import type { TenantListItem } from "@/app/(backoffice)/super-admin/tenants/page";
+} from '@/components/ui/dialog';
+import { createTenant, updateTenant, deleteTenant } from '@/actions/tenant.actions';
+import { playfulToast } from '@/lib/toast';
+import type { TenantListItem } from '@/app/(backoffice)/super-admin/tenants/page';
 
 // ── Create/Edit Dialog ─────────────────────────────────────
 
@@ -48,29 +32,29 @@ function TenantFormDialog({
   const [isPending, startTransition] = useTransition();
   const isEdit = !!editItem;
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [adminName, setAdminName] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
 
   // Sync form on open
   const handleOpenChange = (open: boolean) => {
     if (open && editItem) {
       setName(editItem.name);
-      setDescription(editItem.description ?? "");
+      setDescription(editItem.description ?? '');
     } else if (open && !editItem) {
-      setName("");
-      setDescription("");
-      setAdminName("");
-      setAdminEmail("");
-      setAdminPassword("");
+      setName('');
+      setDescription('');
+      setAdminName('');
+      setAdminEmail('');
+      setAdminPassword('');
     }
     onOpenChange(open);
   };
 
   // We re-sync when open changes
-  if (open && editItem && name === "" && description === "") {
+  if (open && editItem && name === '' && description === '') {
     // This will only fire once when dialog opens with edit item
   }
 
@@ -85,7 +69,7 @@ function TenantFormDialog({
           description,
         });
         if (result.success) {
-          playfulToast.success("Stan berhasil diupdate! 🎉");
+          playfulToast.success('Stan berhasil diupdate! 🎉');
           onOpenChange(false);
         } else {
           playfulToast.error(result.error);
@@ -99,7 +83,7 @@ function TenantFormDialog({
           description,
         });
         if (result.success) {
-          playfulToast.success("Stan baru & akun admin berhasil dibuat! 🏪");
+          playfulToast.success('Stan baru & akun admin berhasil dibuat! 🏪');
           onOpenChange(false);
         } else {
           playfulToast.error(result.error);
@@ -112,11 +96,9 @@ function TenantFormDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Stan" : "Tambah Stan Baru"}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit Stan' : 'Tambah Stan Baru'}</DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "Ubah informasi stan."
-              : "Buat stan baru beserta akun admin penjualnya."}
+            {isEdit ? 'Ubah informasi stan.' : 'Buat stan baru beserta akun admin penjualnya.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -149,9 +131,7 @@ function TenantFormDialog({
           {!isEdit && (
             <>
               <div className="rounded-lg border border-border/40 bg-muted/30 p-3">
-                <p className="mb-3 text-xs font-semibold text-muted-foreground">
-                  Akun Admin Penjual
-                </p>
+                <p className="mb-3 text-xs font-semibold text-muted-foreground">Akun Admin Penjual</p>
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <Label htmlFor="admin-name">Nama Admin</Label>
@@ -192,19 +172,12 @@ function TenantFormDialog({
           )}
 
           <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
               Batal
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : null}
-              {isEdit ? "Simpan" : "Buat Stan"}
+              {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+              {isEdit ? 'Simpan' : 'Buat Stan'}
             </Button>
           </DialogFooter>
         </form>
@@ -231,7 +204,7 @@ function DeleteTenantDialog({
     startTransition(async () => {
       const result = await deleteTenant(tenant.id);
       if (result.success) {
-        playfulToast.success("Stan berhasil dihapus.");
+        playfulToast.success('Stan berhasil dihapus.');
         onOpenChange(false);
       } else {
         playfulToast.error(result.error);
@@ -245,27 +218,16 @@ function DeleteTenantDialog({
         <DialogHeader>
           <DialogTitle>Hapus Stan?</DialogTitle>
           <DialogDescription>
-            Semua data terkait stan <strong>{tenant?.name}</strong> (menu,
-            pesanan lama) akan dihapus. Akun admin akan direset ke role USER.
-            Aksi ini tidak bisa dibatalkan.
+            Semua data terkait stan <strong>{tenant?.name}</strong> (menu, pesanan lama) akan dihapus. Akun admin akan
+            direset ke role USER. Aksi ini tidak bisa dibatalkan.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Batal
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : null}
+          <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+            {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
             Ya, Hapus
           </Button>
         </DialogFooter>
@@ -303,22 +265,22 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
 
   // Gradient colors cycling for tenant cards
   const gradients = [
-    "from-amber-400 to-orange-500",
-    "from-emerald-400 to-green-500",
-    "from-blue-400 to-indigo-500",
-    "from-pink-400 to-rose-500",
-    "from-violet-400 to-purple-500",
-    "from-cyan-400 to-teal-500",
+    'from-amber-400 to-orange-500',
+    'from-emerald-400 to-green-500',
+    'from-blue-400 to-indigo-500',
+    'from-pink-400 to-rose-500',
+    'from-violet-400 to-purple-500',
+    'from-cyan-400 to-teal-500',
   ];
 
   return (
     <>
       {/* Action Bar */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {tenants.length} stan terdaftar
-        </p>
-        <Button onClick={openCreate} className="gap-2 bg-gradient-to-r from-emerald-500 to-green-500 shadow-md shadow-green-200/50 hover:from-emerald-600 hover:to-green-600">
+        <p className="text-sm text-muted-foreground">{tenants.length} stan terdaftar</p>
+        <Button
+          onClick={openCreate}
+          className="gap-2 bg-gradient-to-r from-emerald-500 to-green-500 shadow-md shadow-green-200/50 hover:from-emerald-600 hover:to-green-600">
           <Plus className="size-4" />
           Tambah Stan Baru
         </Button>
@@ -330,9 +292,7 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-100 to-green-100 shadow-inner">
             <Store className="size-8 text-emerald-400" />
           </div>
-          <p className="mt-4 text-sm font-bold text-foreground">
-            Belum ada stan terdaftar
-          </p>
+          <p className="mt-4 text-sm font-bold text-foreground">Belum ada stan terdaftar</p>
           <p className="mt-1 max-w-xs text-center text-xs text-muted-foreground">
             Klik &quot;Tambah Stan Baru&quot; untuk membuat stan pertama.
           </p>
@@ -342,8 +302,7 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
           {tenants.map((t, i) => (
             <div
               key={t.id}
-              className="group relative overflow-hidden rounded-2xl border border-border/30 bg-white/80 backdrop-blur-sm transition-all hover:shadow-lg hover:-translate-y-0.5"
-            >
+              className="group relative overflow-hidden rounded-2xl border border-border/30 bg-white/80 backdrop-blur-sm transition-all hover:shadow-lg hover:-translate-y-0.5">
               {/* Gradient Top Bar */}
               <div className={`h-2 bg-gradient-to-r ${gradients[i % gradients.length]}`} />
 
@@ -351,7 +310,8 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradients[i % gradients.length]} text-white shadow-sm`}>
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradients[i % gradients.length]} text-white shadow-sm`}>
                       <Store className="size-5" />
                     </div>
                     <div className="min-w-0">
@@ -370,8 +330,7 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
                       size="sm"
                       onClick={() => openEdit(t)}
                       title="Edit stan"
-                      className="h-8 w-8 p-0"
-                    >
+                      className="h-8 w-8 p-0">
                       <Pencil className="size-3.5" />
                     </Button>
                     <Button
@@ -379,8 +338,7 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
                       size="sm"
                       onClick={() => openDelete(t)}
                       title="Hapus stan"
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive">
                       <Trash2 className="size-3.5" />
                     </Button>
                   </div>
@@ -412,7 +370,7 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
                   </div>
                   <div className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Calendar className="size-3" />
-                    {new Date(t.createdAt).toLocaleDateString("id-ID")}
+                    {new Date(t.createdAt).toLocaleDateString('id-ID')}
                   </div>
                 </div>
               </div>
@@ -422,16 +380,8 @@ export function TenantManagement({ tenants }: TenantManagementProps) {
       )}
 
       {/* Dialogs */}
-      <TenantFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        editItem={editItem}
-      />
-      <DeleteTenantDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        tenant={deleteItem}
-      />
+      <TenantFormDialog open={formOpen} onOpenChange={setFormOpen} editItem={editItem} />
+      <DeleteTenantDialog open={deleteOpen} onOpenChange={setDeleteOpen} tenant={deleteItem} />
     </>
   );
 }

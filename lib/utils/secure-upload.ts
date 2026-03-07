@@ -5,40 +5,31 @@
  * Rejects dangerous file types (.exe, .php, .sh, etc.).
  */
 
-const ALLOWED_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-const ALLOWED_EXTENSIONS = new Set([
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".webp",
-]);
+const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 
 const DANGEROUS_EXTENSIONS = new Set([
-  ".exe",
-  ".php",
-  ".sh",
-  ".bat",
-  ".cmd",
-  ".ps1",
-  ".msi",
-  ".dll",
-  ".com",
-  ".vbs",
-  ".js",
-  ".jar",
-  ".py",
-  ".rb",
-  ".pl",
-  ".cgi",
-  ".asp",
-  ".aspx",
-  ".jsp",
-  ".svg", // SVG can contain scripts
+  '.exe',
+  '.php',
+  '.sh',
+  '.bat',
+  '.cmd',
+  '.ps1',
+  '.msi',
+  '.dll',
+  '.com',
+  '.vbs',
+  '.js',
+  '.jar',
+  '.py',
+  '.rb',
+  '.pl',
+  '.cgi',
+  '.asp',
+  '.aspx',
+  '.jsp',
+  '.svg', // SVG can contain scripts
 ]);
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -67,7 +58,7 @@ export function validateUploadedFile(
     maxSize?: number;
     allowedMimeTypes?: Set<string>;
     allowedExtensions?: Set<string>;
-  }
+  },
 ): ValidateFileResult {
   const maxSize = options?.maxSize ?? MAX_FILE_SIZE;
   const allowedMime = options?.allowedMimeTypes ?? ALLOWED_MIME_TYPES;
@@ -75,12 +66,12 @@ export function validateUploadedFile(
 
   // 1. Check if it's actually a File
   if (!(file instanceof File)) {
-    return { valid: false, error: "File tidak valid." };
+    return { valid: false, error: 'File tidak valid.' };
   }
 
   // 2. Check file size
   if (file.size === 0) {
-    return { valid: false, error: "File kosong." };
+    return { valid: false, error: 'File kosong.' };
   }
 
   if (file.size > maxSize) {
@@ -93,20 +84,20 @@ export function validateUploadedFile(
 
   // 3. Extract and validate extension
   const fileName = file.name.toLowerCase();
-  const lastDot = fileName.lastIndexOf(".");
-  const extension = lastDot >= 0 ? fileName.slice(lastDot) : "";
+  const lastDot = fileName.lastIndexOf('.');
+  const extension = lastDot >= 0 ? fileName.slice(lastDot) : '';
 
   if (DANGEROUS_EXTENSIONS.has(extension)) {
     return {
       valid: false,
-      error: "Tipe file berbahaya. Upload gambar JPG, PNG, atau WEBP ya.",
+      error: 'Tipe file berbahaya. Upload gambar JPG, PNG, atau WEBP ya.',
     };
   }
 
   if (!allowedExt.has(extension)) {
     return {
       valid: false,
-      error: "Format file belum didukung. Pakai JPG, PNG, atau WEBP ya.",
+      error: 'Format file belum didukung. Pakai JPG, PNG, atau WEBP ya.',
     };
   }
 
@@ -114,22 +105,22 @@ export function validateUploadedFile(
   if (!allowedMime.has(file.type)) {
     return {
       valid: false,
-      error: "Format foto belum didukung. Pakai JPG, PNG, atau WEBP ya.",
+      error: 'Format foto belum didukung. Pakai JPG, PNG, atau WEBP ya.',
     };
   }
 
   // 5. Double-check: MIME must match extension
   const mimeExtMap: Record<string, readonly string[]> = {
-    "image/jpeg": [".jpg", ".jpeg"],
-    "image/png": [".png"],
-    "image/webp": [".webp"],
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
+    'image/webp': ['.webp'],
   };
 
   const validExtsForMime = mimeExtMap[file.type];
   if (validExtsForMime && !validExtsForMime.includes(extension)) {
     return {
       valid: false,
-      error: "Ekstensi file tidak sesuai dengan tipe file. Coba upload ulang ya.",
+      error: 'Ekstensi file tidak sesuai dengan tipe file. Coba upload ulang ya.',
     };
   }
 

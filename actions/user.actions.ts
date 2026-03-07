@@ -1,21 +1,19 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
 import {
   UpdateRoleSchema,
   AdjustBalanceSchema,
   GetAllUsersFiltersSchema,
   type UpdateRoleInput,
   type AdjustBalanceInput,
-} from "@/lib/validations/user.schema";
+} from '@/lib/validations/user.schema';
 
 // ── Types ──────────────────────────────────────────────────
 
-type ActionResult<T = null> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+type ActionResult<T = null> = { success: true; data: T } | { success: false; error: string };
 
 export interface UserListItem {
   id: string;
@@ -36,43 +34,38 @@ interface GetAllUsersFilters {
 
 // ── getAllUsers ─────────────────────────────────────────────
 
-export async function getAllUsers(
-  filters?: GetAllUsersFilters
-): Promise<ActionResult<UserListItem[]>> {
+export async function getAllUsers(filters?: GetAllUsersFilters): Promise<ActionResult<UserListItem[]>> {
   // 1. Auth + RBAC
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
-  if (session.user.role !== "SUPER_ADMIN") {
-    return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Akses ditolak. Hanya Super Admin yang bisa melakukan ini.' };
   }
 
   // 2. Zod validation
   const parsed = GetAllUsersFiltersSchema.safeParse(filters ?? {});
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Data tidak valid.' };
   }
 
   try {
     const where: Record<string, unknown> = {};
 
     // Role filter
-    if (parsed.data.role && parsed.data.role !== "ALL") {
+    if (parsed.data.role && parsed.data.role !== 'ALL') {
       where.role = parsed.data.role;
     }
 
     // Search filter (name or email)
     if (parsed.data.search) {
-      where.OR = [
-        { name: { contains: parsed.data.search } },
-        { email: { contains: parsed.data.search } },
-      ];
+      where.OR = [{ name: { contains: parsed.data.search } }, { email: { contains: parsed.data.search } }];
     }
 
     const users = await prisma.user.findMany({
       where,
-      orderBy: { created_at: "desc" },
+      orderBy: { created_at: 'desc' },
       select: {
         id: true,
         name: true,
@@ -96,29 +89,27 @@ export async function getAllUsers(
 
     return { success: true, data };
   } catch (err) {
-    console.error("[getAllUsers]", {
+    console.error('[getAllUsers]', {
       timestamp: new Date().toISOString(),
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: err instanceof Error ? err.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal memuat data user. Coba lagi ya.",
+      error: 'Gagal memuat data user. Coba lagi ya.',
     };
   }
 }
 
 // ── updateUserRole ─────────────────────────────────────────
 
-export async function updateUserRole(
-  input: UpdateRoleInput
-): Promise<ActionResult> {
+export async function updateUserRole(input: UpdateRoleInput): Promise<ActionResult> {
   // 1. Auth + RBAC
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
-  if (session.user.role !== "SUPER_ADMIN") {
-    return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Akses ditolak. Hanya Super Admin yang bisa melakukan ini.' };
   }
 
   // 2. Zod validation
@@ -126,7 +117,7 @@ export async function updateUserRole(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Data tidak valid.",
+      error: parsed.error.issues[0]?.message ?? 'Data tidak valid.',
     };
   }
 
@@ -134,10 +125,10 @@ export async function updateUserRole(
 
   try {
     // 3. Prevent self-demotion
-    if (userId === session.user.id && role !== "SUPER_ADMIN") {
+    if (userId === session.user.id && role !== 'SUPER_ADMIN') {
       return {
         success: false,
-        error: "Kamu tidak bisa mengubah role dirimu sendiri.",
+        error: 'Kamu tidak bisa mengubah role dirimu sendiri.',
       };
     }
 
@@ -147,14 +138,14 @@ export async function updateUserRole(
       select: { id: true, role: true, tenant: { select: { id: true } } },
     });
     if (!user) {
-      return { success: false, error: "User tidak ditemukan." };
+      return { success: false, error: 'User tidak ditemukan.' };
     }
 
     // 5. If changing FROM ADMIN, check tenant dependency
-    if (user.role === "ADMIN" && user.tenant && role !== "ADMIN") {
+    if (user.role === 'ADMIN' && user.tenant && role !== 'ADMIN') {
       return {
         success: false,
-        error: "User ini masih terhubung ke stan. Hapus stan terlebih dahulu.",
+        error: 'User ini masih terhubung ke stan. Hapus stan terlebih dahulu.',
       };
     }
 
@@ -164,34 +155,32 @@ export async function updateUserRole(
       data: { role },
     });
 
-    revalidatePath("/super-admin/users");
+    revalidatePath('/super-admin/users');
 
     return { success: true, data: null };
   } catch (err) {
-    console.error("[updateUserRole]", {
+    console.error('[updateUserRole]', {
       userId,
       timestamp: new Date().toISOString(),
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: err instanceof Error ? err.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal mengubah role user. Coba lagi ya.",
+      error: 'Gagal mengubah role user. Coba lagi ya.',
     };
   }
 }
 
 // ── adjustUserBalance ──────────────────────────────────────
 
-export async function adjustUserBalance(
-  input: AdjustBalanceInput
-): Promise<ActionResult> {
+export async function adjustUserBalance(input: AdjustBalanceInput): Promise<ActionResult> {
   // 1. Auth + RBAC
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
-  if (session.user.role !== "SUPER_ADMIN") {
-    return { success: false, error: "Akses ditolak. Hanya Super Admin yang bisa melakukan ini." };
+  if (session.user.role !== 'SUPER_ADMIN') {
+    return { success: false, error: 'Akses ditolak. Hanya Super Admin yang bisa melakukan ini.' };
   }
 
   // 2. Zod validation
@@ -199,7 +188,7 @@ export async function adjustUserBalance(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Data tidak valid.",
+      error: parsed.error.issues[0]?.message ?? 'Data tidak valid.',
     };
   }
 
@@ -214,14 +203,14 @@ export async function adjustUserBalance(
       });
 
       if (!user) {
-        throw new Error("USER_NOT_FOUND");
+        throw new Error('USER_NOT_FOUND');
       }
 
-      const delta = type === "INCREMENT" ? amount : -amount;
+      const delta = type === 'INCREMENT' ? amount : -amount;
       const newBalance = user.balance + delta;
 
       if (newBalance < 0) {
-        throw new Error("INSUFFICIENT_BALANCE");
+        throw new Error('INSUFFICIENT_BALANCE');
       }
 
       // Update balance
@@ -234,41 +223,38 @@ export async function adjustUserBalance(
       await tx.notification.create({
         data: {
           user_id: userId,
-          type: type === "INCREMENT" ? "BALANCE_ADJUSTMENT_ADD" : "BALANCE_ADJUSTMENT_DEDUCT",
-          title:
-            type === "INCREMENT"
-              ? "Saldo Ditambahkan"
-              : "Saldo Dikurangi",
+          type: type === 'INCREMENT' ? 'BALANCE_ADJUSTMENT_ADD' : 'BALANCE_ADJUSTMENT_DEDUCT',
+          title: type === 'INCREMENT' ? 'Saldo Ditambahkan' : 'Saldo Dikurangi',
           message:
-            type === "INCREMENT"
-              ? `Saldo kamu ditambahkan Rp ${amount.toLocaleString("id-ID")} oleh Super Admin. Alasan: ${reason}`
-              : `Saldo kamu dikurangi Rp ${amount.toLocaleString("id-ID")} oleh Super Admin. Alasan: ${reason}`,
+            type === 'INCREMENT'
+              ? `Saldo kamu ditambahkan Rp ${amount.toLocaleString('id-ID')} oleh Super Admin. Alasan: ${reason}`
+              : `Saldo kamu dikurangi Rp ${amount.toLocaleString('id-ID')} oleh Super Admin. Alasan: ${reason}`,
         },
       });
     });
 
-    revalidatePath("/super-admin/users");
+    revalidatePath('/super-admin/users');
 
     return { success: true, data: null };
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === "USER_NOT_FOUND") {
-        return { success: false, error: "User tidak ditemukan." };
+      if (error.message === 'USER_NOT_FOUND') {
+        return { success: false, error: 'User tidak ditemukan.' };
       }
-      if (error.message === "INSUFFICIENT_BALANCE") {
+      if (error.message === 'INSUFFICIENT_BALANCE') {
         return {
           success: false,
-          error: "Saldo user tidak cukup untuk dikurangi sebanyak itu.",
+          error: 'Saldo user tidak cukup untuk dikurangi sebanyak itu.',
         };
       }
     }
-    console.error("[adjustUserBalance]", {
+    console.error('[adjustUserBalance]', {
       userId,
       timestamp: new Date().toISOString(),
     });
     return {
       success: false,
-      error: "Gagal mengubah saldo user. Coba lagi ya.",
+      error: 'Gagal mengubah saldo user. Coba lagi ya.',
     };
   }
 }

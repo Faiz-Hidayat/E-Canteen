@@ -1,11 +1,8 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import {
-  MarkAsReadSchema,
-  GetNotificationsSchema,
-} from "@/lib/validations/notification.schema";
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { MarkAsReadSchema, GetNotificationsSchema } from '@/lib/validations/notification.schema';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -19,29 +16,25 @@ interface NotificationData {
   createdAt: string;
 }
 
-type ActionResult<T = null> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+type ActionResult<T = null> = { success: true; data: T } | { success: false; error: string };
 
 // ── getNotifications ───────────────────────────────────────
 
-export async function getNotifications(
-  limit = 20
-): Promise<ActionResult<NotificationData[]>> {
+export async function getNotifications(limit = 20): Promise<ActionResult<NotificationData[]>> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu." };
+    return { success: false, error: 'Kamu harus login dulu.' };
   }
 
   // Zod validation
   const parsed = GetNotificationsSchema.safeParse({ limit });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Data tidak valid.' };
   }
 
   const notifications = await prisma.notification.findMany({
     where: { user_id: session.user.id },
-    orderBy: { created_at: "desc" },
+    orderBy: { created_at: 'desc' },
     take: parsed.data.limit,
   });
 
@@ -64,7 +57,7 @@ export async function getNotifications(
 export async function getUnreadCount(): Promise<ActionResult<number>> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu." };
+    return { success: false, error: 'Kamu harus login dulu.' };
   }
 
   const count = await prisma.notification.count({
@@ -76,18 +69,16 @@ export async function getUnreadCount(): Promise<ActionResult<number>> {
 
 // ── markAsRead ─────────────────────────────────────────────
 
-export async function markAsRead(
-  notificationId: string
-): Promise<ActionResult> {
+export async function markAsRead(notificationId: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu." };
+    return { success: false, error: 'Kamu harus login dulu.' };
   }
 
   // Zod validation
   const parsed = MarkAsReadSchema.safeParse({ notificationId });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Data tidak valid.' };
   }
 
   // Verify ownership
@@ -97,7 +88,7 @@ export async function markAsRead(
   });
 
   if (!notification || notification.user_id !== session.user.id) {
-    return { success: false, error: "Notifikasi tidak ditemukan." };
+    return { success: false, error: 'Notifikasi tidak ditemukan.' };
   }
 
   await prisma.notification.update({
@@ -113,7 +104,7 @@ export async function markAsRead(
 export async function markAllAsRead(): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu." };
+    return { success: false, error: 'Kamu harus login dulu.' };
   }
 
   await prisma.notification.updateMany({

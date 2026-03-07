@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+coverage
+e-canteen-ref-ui
+testsprite_tests
+__tests__
+.env
+.env.local
+.vscode
+playwright.config.ts
+vitest.config.ts
+playwright-report
+test-results

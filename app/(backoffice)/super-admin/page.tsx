@@ -1,21 +1,15 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
-import { formatRupiah } from "@/lib/utils/format";
-import {
-  Users,
-  Store,
-  ShoppingBag,
-  Wallet,
-  TrendingUp,
-} from "lucide-react";
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
+import { formatRupiah } from '@/lib/utils/format';
+import { Users, Store, ShoppingBag, Wallet, TrendingUp } from 'lucide-react';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminDashboardPage() {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== "SUPER_ADMIN") {
-    redirect("/login");
+  if (!session?.user?.id || session.user.role !== 'SUPER_ADMIN') {
+    redirect('/login');
   }
 
   // ── Fetch statistics ─────────────────────────────────────
@@ -25,41 +19,34 @@ export default async function SuperAdminDashboardPage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [
-    totalUsers,
-    totalTenants,
-    todayOrders,
-    todayRevenueResult,
-    weeklyOrders,
-    recentOrders,
-  ] = await Promise.all([
+  const [totalUsers, totalTenants, todayOrders, todayRevenueResult, weeklyOrders, recentOrders] = await Promise.all([
     prisma.user.count(),
     prisma.tenant.count(),
     prisma.order.count({
       where: {
         created_at: { gte: today },
-        status: { notIn: ["CANCELLED"] },
+        status: { notIn: ['CANCELLED'] },
       },
     }),
     prisma.order.aggregate({
       _sum: { total_amount: true },
       where: {
         created_at: { gte: today },
-        status: { notIn: ["CANCELLED"] },
+        status: { notIn: ['CANCELLED'] },
       },
     }),
     // Weekly orders for chart (last 7 days)
     prisma.order.findMany({
       where: {
         created_at: { gte: sevenDaysAgo },
-        status: { notIn: ["CANCELLED"] },
+        status: { notIn: ['CANCELLED'] },
       },
       select: { created_at: true, total_amount: true },
     }),
     // Recent 5 orders
     prisma.order.findMany({
       take: 5,
-      orderBy: { created_at: "desc" },
+      orderBy: { created_at: 'desc' },
       select: {
         id: true,
         total_amount: true,
@@ -75,7 +62,7 @@ export default async function SuperAdminDashboardPage() {
 
   // ── Aggregate weekly orders by day ───────────────────────
 
-  const dayLabels = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
   const weeklyData: { label: string; date: string; orders: number; revenue: number }[] = [];
 
   for (let i = 6; i >= 0; i--) {
@@ -85,12 +72,10 @@ export default async function SuperAdminDashboardPage() {
     const nextD = new Date(d);
     nextD.setDate(nextD.getDate() + 1);
 
-    const dayOrders = weeklyOrders.filter(
-      (o) => o.created_at >= d && o.created_at < nextD
-    );
+    const dayOrders = weeklyOrders.filter((o) => o.created_at >= d && o.created_at < nextD);
 
     weeklyData.push({
-      label: dayLabels[d.getDay()] ?? "",
+      label: dayLabels[d.getDay()] ?? '',
       date: `${d.getDate()}/${d.getMonth() + 1}`,
       orders: dayOrders.length,
       revenue: dayOrders.reduce((sum, o) => sum + o.total_amount, 0),
@@ -102,21 +87,21 @@ export default async function SuperAdminDashboardPage() {
   // ── Status label helper ──────────────────────────────────
 
   const statusLabels: Record<string, string> = {
-    PENDING: "Menunggu",
-    CONFIRMED: "Diterima",
-    PREPARING: "Disiapin",
-    READY: "Siap Diambil",
-    COMPLETED: "Selesai",
-    CANCELLED: "Dibatalkan",
+    PENDING: 'Menunggu',
+    CONFIRMED: 'Diterima',
+    PREPARING: 'Disiapin',
+    READY: 'Siap Diambil',
+    COMPLETED: 'Selesai',
+    CANCELLED: 'Dibatalkan',
   };
 
   const statusColors: Record<string, string> = {
-    PENDING: "bg-yellow-100 text-yellow-800",
-    CONFIRMED: "bg-blue-100 text-blue-800",
-    PREPARING: "bg-orange-100 text-orange-800",
-    READY: "bg-green-100 text-green-800",
-    COMPLETED: "bg-gray-100 text-gray-600",
-    CANCELLED: "bg-red-100 text-red-800",
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    CONFIRMED: 'bg-blue-100 text-blue-800',
+    PREPARING: 'bg-orange-100 text-orange-800',
+    READY: 'bg-green-100 text-green-800',
+    COMPLETED: 'bg-gray-100 text-gray-600',
+    CANCELLED: 'bg-red-100 text-red-800',
   };
 
   return (
@@ -127,9 +112,7 @@ export default async function SuperAdminDashboardPage() {
         <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
         <p className="text-sm font-medium text-white/70">Selamat datang kembali 👋</p>
         <h1 className="mt-1 text-2xl font-bold">Dashboard Super Admin</h1>
-        <p className="mt-1 text-sm text-white/70">
-          Overview seluruh sistem E-Canteen hari ini
-        </p>
+        <p className="mt-1 text-sm text-white/70">Overview seluruh sistem E-Canteen hari ini</p>
       </div>
 
       {/* ── Stat Cards ──────────────────────────────────── */}
@@ -139,7 +122,7 @@ export default async function SuperAdminDashboardPage() {
           gradient="from-blue-500 to-cyan-400"
           shadowColor="shadow-blue-200/50"
           label="Total User"
-          value={totalUsers.toLocaleString("id-ID")}
+          value={totalUsers.toLocaleString('id-ID')}
           emoji="👥"
         />
         <StatCard
@@ -147,7 +130,7 @@ export default async function SuperAdminDashboardPage() {
           gradient="from-purple-500 to-pink-400"
           shadowColor="shadow-purple-200/50"
           label="Total Stan"
-          value={totalTenants.toLocaleString("id-ID")}
+          value={totalTenants.toLocaleString('id-ID')}
           emoji="🏪"
         />
         <StatCard
@@ -155,7 +138,7 @@ export default async function SuperAdminDashboardPage() {
           gradient="from-orange-500 to-amber-400"
           shadowColor="shadow-orange-200/50"
           label="Pesanan Hari Ini"
-          value={todayOrders.toLocaleString("id-ID")}
+          value={todayOrders.toLocaleString('id-ID')}
           emoji="🛒"
         />
         <StatCard
@@ -175,9 +158,7 @@ export default async function SuperAdminDashboardPage() {
             <TrendingUp className="size-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground">
-              Pesanan 7 Hari Terakhir
-            </h2>
+            <h2 className="text-sm font-bold text-foreground">Pesanan 7 Hari Terakhir</h2>
             <p className="text-[11px] text-muted-foreground">Tren pesanan mingguan</p>
           </div>
         </div>
@@ -186,10 +167,7 @@ export default async function SuperAdminDashboardPage() {
             const height = maxOrders > 0 ? (day.orders / maxOrders) * 100 : 0;
             const isToday = i === weeklyData.length - 1;
             return (
-              <div
-                key={day.date}
-                className="group flex flex-1 flex-col items-center gap-1"
-              >
+              <div key={day.date} className="group flex flex-1 flex-col items-center gap-1">
                 {/* Tooltip on hover */}
                 <div className="relative">
                   <div className="pointer-events-none absolute -top-16 left-1/2 z-10 hidden -translate-x-1/2 rounded-xl bg-foreground px-3 py-2 text-xs text-white shadow-lg group-hover:block">
@@ -203,21 +181,19 @@ export default async function SuperAdminDashboardPage() {
                   <div
                     className={`w-full max-w-9 rounded-xl transition-all duration-300 group-hover:scale-105 ${
                       isToday
-                        ? "bg-gradient-to-t from-purple-500 to-violet-400 shadow-md shadow-purple-200/50"
-                        : "bg-gradient-to-t from-[#FFB26B]/60 to-[#FFB26B]/30 group-hover:from-[#FFB26B] group-hover:to-[#FFB26B]/70"
+                        ? 'bg-gradient-to-t from-purple-500 to-violet-400 shadow-md shadow-purple-200/50'
+                        : 'bg-gradient-to-t from-[#FFB26B]/60 to-[#FFB26B]/30 group-hover:from-[#FFB26B] group-hover:to-[#FFB26B]/70'
                     }`}
                     style={{
                       height: `${Math.max(height, 6)}%`,
-                      marginTop: "auto",
+                      marginTop: 'auto',
                     }}
                   />
                 </div>
-                <span className={`text-[11px] font-semibold ${isToday ? "text-purple-600" : "text-muted-foreground"}`}>
+                <span className={`text-[11px] font-semibold ${isToday ? 'text-purple-600' : 'text-muted-foreground'}`}>
                   {day.label}
                 </span>
-                <span className="text-[9px] text-muted-foreground/60">
-                  {day.date}
-                </span>
+                <span className="text-[9px] text-muted-foreground/60">{day.date}</span>
               </div>
             );
           })}
@@ -231,9 +207,7 @@ export default async function SuperAdminDashboardPage() {
             <ShoppingBag className="size-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground">
-              Pesanan Terbaru
-            </h2>
+            <h2 className="text-sm font-bold text-foreground">Pesanan Terbaru</h2>
             <p className="text-[11px] text-muted-foreground">5 pesanan terakhir dari semua stan</p>
           </div>
         </div>
@@ -241,41 +215,33 @@ export default async function SuperAdminDashboardPage() {
           {recentOrders.length === 0 && (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/40 py-12">
               <span className="text-3xl">📋</span>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Belum ada pesanan.
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">Belum ada pesanan.</p>
             </div>
           )}
           {recentOrders.map((order) => (
             <div
               key={order.id}
-              className="flex items-center justify-between rounded-xl border border-border/30 bg-white/60 px-4 py-3 transition-all hover:bg-white hover:shadow-sm"
-            >
+              className="flex items-center justify-between rounded-xl border border-border/30 bg-white/60 px-4 py-3 transition-all hover:bg-white hover:shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-50 text-sm">
                   {order.user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {order.user.name}
-                  </p>
+                  <p className="truncate text-sm font-semibold text-foreground">{order.user.name}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {order.tenant.name} · {new Date(order.created_at).toLocaleDateString("id-ID")}
+                    {order.tenant.name} · {new Date(order.created_at).toLocaleDateString('id-ID')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-                    statusColors[order.status] ?? "bg-gray-100 text-gray-600"
-                  }`}
-                >
+                    statusColors[order.status] ?? 'bg-gray-100 text-gray-600'
+                  }`}>
                   <span className="h-1.5 w-1.5 rounded-full bg-current opacity-60" />
                   {statusLabels[order.status] ?? order.status}
                 </span>
-                <p className="text-sm font-bold text-foreground">
-                  {formatRupiah(order.total_amount)}
-                </p>
+                <p className="text-sm font-bold text-foreground">{formatRupiah(order.total_amount)}</p>
               </div>
             </div>
           ))}
@@ -309,8 +275,7 @@ function StatCard({
       </div>
       <div className="flex items-center gap-3">
         <div
-          className={`flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg ${shadowColor}`}
-        >
+          className={`flex size-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg ${shadowColor}`}>
           {icon}
         </div>
         <div className="min-w-0">

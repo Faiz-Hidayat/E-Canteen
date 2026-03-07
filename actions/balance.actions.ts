@@ -1,9 +1,9 @@
-"use server";
+'use server';
 
-import { auth } from "@/lib/auth";
-import { createSnapTransaction } from "@/lib/midtrans";
-import { prisma } from "@/lib/prisma";
-import { TopUpSchema, GetBalanceHistorySchema } from "@/lib/validations/balance.schema";
+import { auth } from '@/lib/auth';
+import { createSnapTransaction } from '@/lib/midtrans';
+import { prisma } from '@/lib/prisma';
+import { TopUpSchema, GetBalanceHistorySchema } from '@/lib/validations/balance.schema';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -13,31 +13,27 @@ type CreateMidtransTokenResult =
 
 export interface BalanceHistoryItem {
   id: string;
-  type: "PURCHASE" | "TOPUP" | "REFUND";
+  type: 'PURCHASE' | 'TOPUP' | 'REFUND';
   description: string;
   amount: number;
   createdAt: string;
 }
 
-type BalanceHistoryResult =
-  | { success: true; data: BalanceHistoryItem[] }
-  | { success: false; error: string };
+type BalanceHistoryResult = { success: true; data: BalanceHistoryItem[] } | { success: false; error: string };
 
 // ── createMidtransTopUpToken ───────────────────────────────
 
-export async function createMidtransTopUpToken(
-  amount: number
-): Promise<CreateMidtransTokenResult> {
+export async function createMidtransTopUpToken(amount: number): Promise<CreateMidtransTokenResult> {
   // 1. Auth check
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
 
   // 2. Zod validation
   const parsed = TopUpSchema.safeParse({ amount });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Nominal tidak valid." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Nominal tidak valid.' };
   }
 
   const userId = session.user.id;
@@ -50,7 +46,7 @@ export async function createMidtransTopUpToken(
     });
 
     if (!user) {
-      return { success: false, error: "User tidak ditemukan." };
+      return { success: false, error: 'User tidak ditemukan.' };
     }
 
     // 4. Create Snap transaction
@@ -61,9 +57,9 @@ export async function createMidtransTopUpToken(
         order_id: orderId,
         gross_amount: parsed.data.amount,
       },
-      finishPath: "/profile",
-      unfinishPath: "/profile",
-      errorPath: "/profile",
+      finishPath: '/profile',
+      unfinishPath: '/profile',
+      errorPath: '/profile',
     });
 
     return {
@@ -74,34 +70,32 @@ export async function createMidtransTopUpToken(
       },
     };
   } catch (error) {
-    console.error("[createMidtransTopUpToken]", {
+    console.error('[createMidtransTopUpToken]', {
       userId,
       amount: parsed.data.amount,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
 
     return {
       success: false,
-      error: "Gagal membuat token pembayaran. Coba lagi ya.",
+      error: 'Gagal membuat token pembayaran. Coba lagi ya.',
     };
   }
 }
 
 // ── getBalanceHistory ──────────────────────────────────────
 
-export async function getBalanceHistory(
-  limit = 20
-): Promise<BalanceHistoryResult> {
+export async function getBalanceHistory(limit = 20): Promise<BalanceHistoryResult> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
 
   // Zod validation
   const parsed = GetBalanceHistorySchema.safeParse({ limit });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Data tidak valid.' };
   }
 
   const userId = session.user.id;
@@ -111,8 +105,8 @@ export async function getBalanceHistory(
     const orders = await prisma.order.findMany({
       where: {
         user_id: userId,
-        payment_method: "BALANCE",
-        status: { notIn: ["PENDING", "CANCELLED"] },
+        payment_method: 'BALANCE',
+        status: { notIn: ['PENDING', 'CANCELLED'] },
       },
       select: {
         id: true,
@@ -121,17 +115,17 @@ export async function getBalanceHistory(
         status: true,
         tenant: { select: { name: true } },
       },
-      orderBy: { created_at: "desc" },
+      orderBy: { created_at: 'desc' },
       take: parsed.data.limit,
     });
 
     // Fetch top-ups (processed webhooks for this user)
     const topups = await prisma.processedWebhook.findMany({
       where: {
-        type: "TOPUP",
+        type: 'TOPUP',
         midtrans_order_id: { startsWith: `TOPUP-${userId}-` },
       },
-      orderBy: { processed_at: "desc" },
+      orderBy: { processed_at: 'desc' },
       take: parsed.data.limit,
     });
 
@@ -139,8 +133,8 @@ export async function getBalanceHistory(
     const refunds = await prisma.order.findMany({
       where: {
         user_id: userId,
-        status: "CANCELLED",
-        payment_method: "BALANCE",
+        status: 'CANCELLED',
+        payment_method: 'BALANCE',
         cancellation_reason: { not: null },
       },
       select: {
@@ -149,7 +143,7 @@ export async function getBalanceHistory(
         created_at: true,
         tenant: { select: { name: true } },
       },
-      orderBy: { created_at: "desc" },
+      orderBy: { created_at: 'desc' },
       take: parsed.data.limit,
     });
 
@@ -159,7 +153,7 @@ export async function getBalanceHistory(
     for (const order of orders) {
       history.push({
         id: order.id,
-        type: "PURCHASE",
+        type: 'PURCHASE',
         description: `Pembelian di ${order.tenant.name}`,
         amount: -order.total_amount,
         createdAt: order.created_at.toISOString(),
@@ -170,8 +164,8 @@ export async function getBalanceHistory(
     for (const topup of topups) {
       history.push({
         id: topup.midtrans_order_id,
-        type: "TOPUP",
-        description: "Top-Up Saldo",
+        type: 'TOPUP',
+        description: 'Top-Up Saldo',
         amount: topup.amount ?? 0,
         createdAt: topup.processed_at.toISOString(),
       });
@@ -181,7 +175,7 @@ export async function getBalanceHistory(
     for (const refund of refunds) {
       history.push({
         id: `refund-${refund.id}`,
-        type: "REFUND",
+        type: 'REFUND',
         description: `Refund dari ${refund.tenant.name}`,
         amount: refund.total_amount,
         createdAt: refund.created_at.toISOString(),
@@ -189,22 +183,19 @@ export async function getBalanceHistory(
     }
 
     // Sort by date descending
-    history.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    history.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return { success: true, data: history.slice(0, parsed.data.limit) };
   } catch (error) {
-    console.error("[getBalanceHistory]", {
+    console.error('[getBalanceHistory]', {
       userId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
 
     return {
       success: false,
-      error: "Gagal memuat riwayat saldo. Coba lagi ya.",
+      error: 'Gagal memuat riwayat saldo. Coba lagi ya.',
     };
   }
 }
@@ -216,13 +207,11 @@ type CreateMidtransOrderTokenResult =
   | { success: true; data: { token: string; redirectUrl: string } }
   | { success: false; error: string };
 
-export async function createMidtransOrderToken(
-  orderId: string
-): Promise<CreateMidtransOrderTokenResult> {
+export async function createMidtransOrderToken(orderId: string): Promise<CreateMidtransOrderTokenResult> {
   // 1. Auth check
   const session = await auth();
   if (!session?.user?.id) {
-    return { success: false, error: "Kamu harus login dulu ya." };
+    return { success: false, error: 'Kamu harus login dulu ya.' };
   }
 
   const userId = session.user.id;
@@ -242,28 +231,28 @@ export async function createMidtransOrderToken(
     });
 
     if (!order) {
-      return { success: false, error: "Pesanan tidak ditemukan." };
+      return { success: false, error: 'Pesanan tidak ditemukan.' };
     }
 
     // 3. Verify ownership
     if (order.user_id !== userId) {
-      return { success: false, error: "Kamu tidak punya akses ke pesanan ini." };
+      return { success: false, error: 'Kamu tidak punya akses ke pesanan ini.' };
     }
 
     // 4. Verify it's a MIDTRANS payment and still PENDING
-    if (order.payment_method !== "MIDTRANS") {
-      return { success: false, error: "Pesanan ini bukan pembayaran Midtrans." };
+    if (order.payment_method !== 'MIDTRANS') {
+      return { success: false, error: 'Pesanan ini bukan pembayaran Midtrans.' };
     }
 
-    if (order.status !== "PENDING") {
-      return { success: false, error: "Pesanan sudah diproses." };
+    if (order.status !== 'PENDING') {
+      return { success: false, error: 'Pesanan sudah diproses.' };
     }
 
     // 5. Create Snap transaction with expiry
     const MIDTRANS_PAYMENT_WINDOW_MINUTES = 15;
     const now = new Date();
     // Midtrans expects "yyyy-MM-dd HH:mm:ss +0700" format
-    const pad = (n: number) => String(n).padStart(2, "0");
+    const pad = (n: number) => String(n).padStart(2, '0');
     const startTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} +0700`;
 
     const transaction = await createSnapTransaction({
@@ -273,12 +262,12 @@ export async function createMidtransOrderToken(
       },
       expiry: {
         start_time: startTime,
-        unit: "minutes",
+        unit: 'minutes',
         duration: MIDTRANS_PAYMENT_WINDOW_MINUTES,
       },
-      finishPath: "/orders",
-      unfinishPath: "/cart",
-      errorPath: "/cart",
+      finishPath: '/orders',
+      unfinishPath: '/cart',
+      errorPath: '/cart',
     });
 
     return {
@@ -289,16 +278,16 @@ export async function createMidtransOrderToken(
       },
     };
   } catch (error) {
-    console.error("[createMidtransOrderToken]", {
+    console.error('[createMidtransOrderToken]', {
       userId,
       orderId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
 
     return {
       success: false,
-      error: "Gagal membuat token pembayaran. Coba lagi ya.",
+      error: 'Gagal membuat token pembayaran. Coba lagi ya.',
     };
   }
 }

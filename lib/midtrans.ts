@@ -1,14 +1,14 @@
-import "server-only";
-import Midtrans from "midtrans-client";
+import 'server-only';
+import Midtrans from 'midtrans-client';
 
 /**
  * Midtrans Snap client — server-only.
  * NEVER import this from client components.
  */
 export const snap = new Midtrans.Snap({
-  isProduction: process.env.NODE_ENV === "production",
-  serverKey: process.env.MIDTRANS_SERVER_KEY ?? "",
-  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? "",
+  isProduction: process.env.NODE_ENV === 'production',
+  serverKey: process.env.MIDTRANS_SERVER_KEY ?? '',
+  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? '',
 });
 
 // ── Universal Snap helper ──────────────────────────────────
@@ -16,9 +16,9 @@ export const snap = new Midtrans.Snap({
 // and callbacks per-transaction. All URLs derived from APP_URL env var.
 
 const SNAP_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://app.midtrans.com/snap/v1/transactions"
-    : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+  process.env.NODE_ENV === 'production'
+    ? 'https://app.midtrans.com/snap/v1/transactions'
+    : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 
 interface SnapTransactionParams {
   transaction_details: {
@@ -50,17 +50,15 @@ interface SnapTransactionResult {
  * This means you only need to update `APP_URL` in `.env` when your tunnel changes.
  * The Midtrans Dashboard notification URLs become irrelevant.
  */
-export async function createSnapTransaction(
-  params: SnapTransactionParams
-): Promise<SnapTransactionResult> {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY ?? "";
-  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+export async function createSnapTransaction(params: SnapTransactionParams): Promise<SnapTransactionResult> {
+  const serverKey = process.env.MIDTRANS_SERVER_KEY ?? '';
+  const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
 
   // Derive URLs from APP_URL
   const notificationUrl = `${appUrl}/api/webhooks/midtrans`;
-  const finishUrl = `${appUrl}${params.finishPath ?? "/orders"}`;
-  const unfinishUrl = `${appUrl}${params.unfinishPath ?? "/cart"}`;
-  const errorUrl = `${appUrl}${params.errorPath ?? "/cart"}`;
+  const finishUrl = `${appUrl}${params.finishPath ?? '/orders'}`;
+  const unfinishUrl = `${appUrl}${params.unfinishPath ?? '/cart'}`;
+  const errorUrl = `${appUrl}${params.errorPath ?? '/cart'}`;
 
   // Build request body (strip our custom path fields)
   const { finishPath: _fp, unfinishPath: _up, errorPath: _ep, ...rest } = params;
@@ -74,21 +72,21 @@ export async function createSnapTransaction(
   };
 
   const response = await fetch(SNAP_BASE_URL, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
       // Basic Auth: base64(SERVER_KEY + ":")
-      Authorization: `Basic ${Buffer.from(serverKey + ":").toString("base64")}`,
+      Authorization: `Basic ${Buffer.from(serverKey + ':').toString('base64')}`,
       // Override webhook notification URL per-transaction
-      "X-Override-Notification": notificationUrl,
+      'X-Override-Notification': notificationUrl,
     },
     body: JSON.stringify(body),
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
-    console.error("[createSnapTransaction] Midtrans API error:", {
+    console.error('[createSnapTransaction] Midtrans API error:', {
       status: response.status,
       body: errorBody,
     });

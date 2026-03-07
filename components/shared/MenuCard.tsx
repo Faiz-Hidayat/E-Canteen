@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus, Star } from "lucide-react";
+import { Plus } from "lucide-react";
 import { formatRupiah } from "@/lib/utils/format";
 import { playfulToast } from "@/lib/toast";
 import { useCartStore } from "@/hooks/useCartStore";
@@ -64,10 +64,10 @@ export function MenuCard({
         )}
 
         {/* Rating badge */}
-        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold text-gray-700 shadow-sm backdrop-blur-sm">
+        {/* <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold text-gray-700 shadow-sm backdrop-blur-sm">
           <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
           4.8
-        </div>
+        </div> */}
 
         {/* Out of stock overlay */}
         {!isAvailable && (

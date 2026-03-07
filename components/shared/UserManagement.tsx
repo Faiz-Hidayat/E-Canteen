@@ -1,18 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useTransition } from "react";
-import {
-  Search,
-  Loader2,
-  Shield,
-  ShieldCheck,
-  ShieldAlert,
-  Wallet,
-  Store,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useTransition } from 'react';
+import { Search, Loader2, Shield, ShieldCheck, ShieldAlert, Wallet, Store } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -20,39 +12,26 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { updateUserRole, adjustUserBalance } from "@/actions/user.actions";
-import { formatRupiah } from "@/lib/utils/format";
-import { playfulToast } from "@/lib/toast";
-import type { UserListPageItem } from "@/app/(backoffice)/super-admin/users/page";
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { updateUserRole, adjustUserBalance } from '@/actions/user.actions';
+import { formatRupiah } from '@/lib/utils/format';
+import { playfulToast } from '@/lib/toast';
+import type { UserListPageItem } from '@/app/(backoffice)/super-admin/users/page';
 
 // ── Role helpers ────────────────────────────────────────────
 
 const ROLE_LABELS: Record<string, string> = {
-  USER: "User",
-  ADMIN: "Admin",
-  SUPER_ADMIN: "Super Admin",
+  USER: 'User',
+  ADMIN: 'Admin',
+  SUPER_ADMIN: 'Super Admin',
 };
 
 const ROLE_COLORS: Record<string, string> = {
-  USER: "bg-gray-100 text-gray-700 border-gray-200",
-  ADMIN: "bg-blue-50 text-blue-700 border-blue-200",
-  SUPER_ADMIN: "bg-purple-50 text-purple-700 border-purple-200",
+  USER: 'bg-gray-100 text-gray-700 border-gray-200',
+  ADMIN: 'bg-blue-50 text-blue-700 border-blue-200',
+  SUPER_ADMIN: 'bg-purple-50 text-purple-700 border-purple-200',
 };
 
 const ROLE_ICONS: Record<string, React.ReactNode> = {
@@ -62,13 +41,13 @@ const ROLE_ICONS: Record<string, React.ReactNode> = {
 };
 
 const ROLE_PILL_COLORS: Record<string, string> = {
-  ALL: "bg-foreground text-white",
-  USER: "bg-gray-700 text-white",
-  ADMIN: "bg-blue-600 text-white",
-  SUPER_ADMIN: "bg-purple-600 text-white",
+  ALL: 'bg-foreground text-white',
+  USER: 'bg-gray-700 text-white',
+  ADMIN: 'bg-blue-600 text-white',
+  SUPER_ADMIN: 'bg-purple-600 text-white',
 };
 
-const ROLE_FILTERS = ["ALL", "USER", "ADMIN", "SUPER_ADMIN"] as const;
+const ROLE_FILTERS = ['ALL', 'USER', 'ADMIN', 'SUPER_ADMIN'] as const;
 
 // ── Change Role Dialog ──────────────────────────────────────
 
@@ -82,7 +61,7 @@ function ChangeRoleDialog({
   user: UserListPageItem | null;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [newRole, setNewRole] = useState("USER");
+  const [newRole, setNewRole] = useState('USER');
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen && user) {
@@ -98,10 +77,10 @@ function ChangeRoleDialog({
     startTransition(async () => {
       const result = await updateUserRole({
         userId: user.id,
-        role: newRole as "USER" | "ADMIN" | "SUPER_ADMIN",
+        role: newRole as 'USER' | 'ADMIN' | 'SUPER_ADMIN',
       });
       if (result.success) {
-        playfulToast.success("Role berhasil diubah!");
+        playfulToast.success('Role berhasil diubah!');
         onOpenChange(false);
       } else {
         playfulToast.error(result.error);
@@ -133,12 +112,7 @@ function ChangeRoleDialog({
             </Select>
           </div>
           <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
               Batal
             </Button>
             <Button type="submit" disabled={isPending}>
@@ -164,17 +138,15 @@ function AdjustBalanceDialog({
   user: UserListPageItem | null;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [adjustType, setAdjustType] = useState<"INCREMENT" | "DECREMENT">(
-    "INCREMENT",
-  );
-  const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("");
+  const [adjustType, setAdjustType] = useState<'INCREMENT' | 'DECREMENT'>('INCREMENT');
+  const [amount, setAmount] = useState('');
+  const [reason, setReason] = useState('');
 
   const handleOpenChange = (isOpen: boolean) => {
     if (isOpen) {
-      setAdjustType("INCREMENT");
-      setAmount("");
-      setReason("");
+      setAdjustType('INCREMENT');
+      setAmount('');
+      setReason('');
     }
     onOpenChange(isOpen);
   };
@@ -185,11 +157,11 @@ function AdjustBalanceDialog({
 
     const numAmount = Number(amount);
     if (!numAmount || numAmount <= 0) {
-      playfulToast.error("Nominal harus lebih dari 0.");
+      playfulToast.error('Nominal harus lebih dari 0.');
       return;
     }
     if (!reason.trim()) {
-      playfulToast.error("Alasan wajib diisi.");
+      playfulToast.error('Alasan wajib diisi.');
       return;
     }
 
@@ -202,9 +174,7 @@ function AdjustBalanceDialog({
       });
       if (result.success) {
         playfulToast.success(
-          adjustType === "INCREMENT"
-            ? "Saldo berhasil ditambahkan! 💰"
-            : "Saldo berhasil dikurangi.",
+          adjustType === 'INCREMENT' ? 'Saldo berhasil ditambahkan! 💰' : 'Saldo berhasil dikurangi.',
         );
         onOpenChange(false);
       } else {
@@ -219,19 +189,13 @@ function AdjustBalanceDialog({
         <DialogHeader>
           <DialogTitle>Adjustment Saldo</DialogTitle>
           <DialogDescription>
-            Saldo saat ini <strong>{user?.name}</strong>:{" "}
-            <strong>{formatRupiah(user?.balance ?? 0)}</strong>
+            Saldo saat ini <strong>{user?.name}</strong>: <strong>{formatRupiah(user?.balance ?? 0)}</strong>
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>Tipe</Label>
-            <Select
-              value={adjustType}
-              onValueChange={(v) =>
-                setAdjustType(v as "INCREMENT" | "DECREMENT")
-              }
-            >
+            <Select value={adjustType} onValueChange={(v) => setAdjustType(v as 'INCREMENT' | 'DECREMENT')}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -268,17 +232,12 @@ function AdjustBalanceDialog({
           </div>
 
           <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
               Batal
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {adjustType === "INCREMENT" ? "Tambah" : "Kurangi"}
+              {adjustType === 'INCREMENT' ? 'Tambah' : 'Kurangi'}
             </Button>
           </DialogFooter>
         </form>
@@ -294,8 +253,8 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ users }: UserManagementProps) {
-  const [roleFilter, setRoleFilter] = useState<string>("ALL");
-  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
+  const [search, setSearch] = useState('');
 
   // Dialog states
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -305,12 +264,10 @@ export function UserManagement({ users }: UserManagementProps) {
 
   // Filtering
   const filtered = users.filter((u) => {
-    if (roleFilter !== "ALL" && u.role !== roleFilter) return false;
+    if (roleFilter !== 'ALL' && u.role !== roleFilter) return false;
     if (search) {
       const q = search.toLowerCase();
-      return (
-        u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-      );
+      return u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
     }
     return true;
   });
@@ -337,12 +294,11 @@ export function UserManagement({ users }: UserManagementProps) {
               onClick={() => setRoleFilter(role)}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
                 roleFilter === role
-                  ? `${ROLE_PILL_COLORS[role] ?? "bg-foreground text-white"} border-transparent shadow-sm`
-                  : "border-border/40 bg-white/80 text-muted-foreground hover:bg-muted/60"
-              }`}
-            >
-              {role !== "ALL" && ROLE_ICONS[role]}
-              {role === "ALL" ? "Semua" : (ROLE_LABELS[role] ?? role)}
+                  ? `${ROLE_PILL_COLORS[role] ?? 'bg-foreground text-white'} border-transparent shadow-sm`
+                  : 'border-border/40 bg-white/80 text-muted-foreground hover:bg-muted/60'
+              }`}>
+              {role !== 'ALL' && ROLE_ICONS[role]}
+              {role === 'ALL' ? 'Semua' : (ROLE_LABELS[role] ?? role)}
             </button>
           ))}
         </div>
@@ -370,12 +326,8 @@ export function UserManagement({ users }: UserManagementProps) {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 shadow-inner">
             <Search className="size-7 text-blue-400" />
           </div>
-          <p className="mt-3 text-sm font-bold text-foreground">
-            Tidak ada user ditemukan
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Coba ubah filter atau kata kunci pencarian
-          </p>
+          <p className="mt-3 text-sm font-bold text-foreground">Tidak ada user ditemukan</p>
+          <p className="mt-1 text-xs text-muted-foreground">Coba ubah filter atau kata kunci pencarian</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border/30 bg-white/80 backdrop-blur-sm">
@@ -393,55 +345,46 @@ export function UserManagement({ users }: UserManagementProps) {
             <TableBody>
               {filtered.map((u) => {
                 const initials = u.name
-                  .split(" ")
+                  .split(' ')
                   .map((w) => w[0])
-                  .join("")
+                  .join('')
                   .toUpperCase()
                   .slice(0, 2);
 
                 const avatarGradients = [
-                  "from-amber-400 to-orange-500",
-                  "from-blue-400 to-indigo-500",
-                  "from-emerald-400 to-green-500",
-                  "from-pink-400 to-rose-500",
-                  "from-violet-400 to-purple-500",
+                  'from-amber-400 to-orange-500',
+                  'from-blue-400 to-indigo-500',
+                  'from-emerald-400 to-green-500',
+                  'from-pink-400 to-rose-500',
+                  'from-violet-400 to-purple-500',
                 ];
-                const avatarGradient =
-                  avatarGradients[
-                    u.name.charCodeAt(0) % avatarGradients.length
-                  ];
+                const avatarGradient = avatarGradients[u.name.charCodeAt(0) % avatarGradients.length];
 
                 return (
                   <TableRow key={u.id} className="transition-colors hover:bg-muted/30">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient} text-[11px] font-bold text-white shadow-sm`}
-                        >
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarGradient} text-[11px] font-bold text-white shadow-sm`}>
                           {initials}
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{u.name}</p>
-                          <p className="truncate text-[11px] text-muted-foreground">
-                            {u.email}
-                          </p>
+                          <p className="truncate text-[11px] text-muted-foreground">{u.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
-                          ROLE_COLORS[u.role] ?? "bg-gray-100 text-gray-600 border-gray-200"
-                        }`}
-                      >
+                          ROLE_COLORS[u.role] ?? 'bg-gray-100 text-gray-600 border-gray-200'
+                        }`}>
                         {ROLE_ICONS[u.role]}
                         {ROLE_LABELS[u.role] ?? u.role}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <span className="text-sm font-bold text-foreground">
-                        {formatRupiah(u.balance)}
-                      </span>
+                      <span className="text-sm font-bold text-foreground">{formatRupiah(u.balance)}</span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {u.tenantName ? (
@@ -454,7 +397,7 @@ export function UserManagement({ users }: UserManagementProps) {
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {new Date(u.createdAt).toLocaleDateString("id-ID")}
+                      {new Date(u.createdAt).toLocaleDateString('id-ID')}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-0.5">
@@ -463,8 +406,7 @@ export function UserManagement({ users }: UserManagementProps) {
                           size="sm"
                           onClick={() => openRoleDialog(u)}
                           title="Ubah role"
-                          className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                        >
+                          className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600">
                           <ShieldCheck className="size-4" />
                         </Button>
                         <Button
@@ -472,8 +414,7 @@ export function UserManagement({ users }: UserManagementProps) {
                           size="sm"
                           onClick={() => openBalanceDialog(u)}
                           title="Adjustment saldo"
-                          className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600"
-                        >
+                          className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600">
                           <Wallet className="size-4" />
                         </Button>
                       </div>
@@ -487,16 +428,8 @@ export function UserManagement({ users }: UserManagementProps) {
       )}
 
       {/* Dialogs */}
-      <ChangeRoleDialog
-        open={roleDialogOpen}
-        onOpenChange={setRoleDialogOpen}
-        user={roleUser}
-      />
-      <AdjustBalanceDialog
-        open={balanceDialogOpen}
-        onOpenChange={setBalanceDialogOpen}
-        user={balanceUser}
-      />
+      <ChangeRoleDialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen} user={roleUser} />
+      <AdjustBalanceDialog open={balanceDialogOpen} onOpenChange={setBalanceDialogOpen} user={balanceUser} />
     </>
   );
 }

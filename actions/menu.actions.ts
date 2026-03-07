@@ -1,12 +1,12 @@
-"use server";
+'use server';
 
-import { mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { randomUUID } from "node:crypto";
-import sharp from "sharp";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { mkdir, readdir, stat, unlink, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
 import {
   CreateMenuSchema,
   UpdateMenuSchema,
@@ -16,24 +16,20 @@ import {
   type UpdateMenuInput,
   type DeleteMenuInput,
   type ToggleMenuAvailabilityInput,
-} from "@/lib/validations/menu.schema";
-import { validateUploadedFile } from "@/lib/utils/secure-upload";
+} from '@/lib/validations/menu.schema';
+import { validateUploadedFile } from '@/lib/utils/secure-upload';
 
 // ── Types ──────────────────────────────────────────────────
 
-type ActionResult<T = null> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+type ActionResult<T = null> = { success: true; data: T } | { success: false; error: string };
 
-type UploadResult =
-  | { success: true; data: { photoUrl: string } }
-  | { success: false; error: string };
+type UploadResult = { success: true; data: { photoUrl: string } } | { success: false; error: string };
 
 const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
 const MAX_INPUT_BYTES = 15 * 1024 * 1024;
 
 async function compressMenuImage(inputBuffer: Buffer): Promise<Buffer> {
-  const image = sharp(inputBuffer, { failOn: "none" }).rotate();
+  const image = sharp(inputBuffer, { failOn: 'none' }).rotate();
   const metadata = await image.metadata();
 
   const originalWidth = metadata.width ?? 1920;
@@ -41,7 +37,7 @@ async function compressMenuImage(inputBuffer: Buffer): Promise<Buffer> {
   let quality = 88;
 
   let output = await image
-    .resize({ width: targetWidth, fit: "inside", withoutEnlargement: true })
+    .resize({ width: targetWidth, fit: 'inside', withoutEnlargement: true })
     .webp({ quality, effort: 6, smartSubsample: true })
     .toBuffer();
 
@@ -49,15 +45,15 @@ async function compressMenuImage(inputBuffer: Buffer): Promise<Buffer> {
     quality = Math.max(60, quality - 6);
     targetWidth = Math.max(720, Math.floor(targetWidth * 0.88));
 
-    output = await sharp(inputBuffer, { failOn: "none" })
+    output = await sharp(inputBuffer, { failOn: 'none' })
       .rotate()
-      .resize({ width: targetWidth, fit: "inside", withoutEnlargement: true })
+      .resize({ width: targetWidth, fit: 'inside', withoutEnlargement: true })
       .webp({ quality, effort: 6, smartSubsample: true })
       .toBuffer();
   }
 
   if (output.length > MAX_OUTPUT_BYTES) {
-    throw new Error("Compressed image still exceeds max output size");
+    throw new Error('Compressed image still exceeds max output size');
   }
 
   return output;
@@ -65,16 +61,16 @@ async function compressMenuImage(inputBuffer: Buffer): Promise<Buffer> {
 
 // ── File helpers ───────────────────────────────────────────
 
-const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads", "menus");
+const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads', 'menus');
 
 function isLocalUpload(url: string | null | undefined): boolean {
-  return !!url && url.startsWith("/uploads/menus/");
+  return !!url && url.startsWith('/uploads/menus/');
 }
 
 async function deleteLocalFile(photoUrl: string): Promise<void> {
   try {
-    const fileName = photoUrl.replace("/uploads/menus/", "");
-    if (!fileName || fileName.includes("..") || fileName.includes("/")) return;
+    const fileName = photoUrl.replace('/uploads/menus/', '');
+    if (!fileName || fileName.includes('..') || fileName.includes('/')) return;
     const filePath = path.join(UPLOADS_DIR, fileName);
     await unlink(filePath);
   } catch {
@@ -84,22 +80,20 @@ async function deleteLocalFile(photoUrl: string): Promise<void> {
 
 // ── Helpers ────────────────────────────────────────────────
 
-async function getAdminTenantId(): Promise<
-  { tenantId: string } | { error: string }
-> {
+async function getAdminTenantId(): Promise<{ tenantId: string } | { error: string }> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: "Kamu harus login dulu ya." };
+    return { error: 'Kamu harus login dulu ya.' };
   }
 
   const role = session.user.role;
-  if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-    return { error: "Kamu tidak punya akses untuk ini." };
+  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+    return { error: 'Kamu tidak punya akses untuk ini.' };
   }
 
   const tenantId = session.user.tenantId;
   if (!tenantId) {
-    return { error: "Akun admin kamu belum terhubung ke stan." };
+    return { error: 'Akun admin kamu belum terhubung ke stan.' };
   }
 
   return { tenantId };
@@ -107,18 +101,15 @@ async function getAdminTenantId(): Promise<
 
 // ── createMenu ─────────────────────────────────────────────
 
-export async function createMenu(
-  input: CreateMenuInput
-): Promise<ActionResult<{ menuId: string }>> {
+export async function createMenu(input: CreateMenuInput): Promise<ActionResult<{ menuId: string }>> {
   // 1. Auth + tenant check
   const tenant = await getAdminTenantId();
-  if ("error" in tenant) return { success: false, error: tenant.error };
+  if ('error' in tenant) return { success: false, error: tenant.error };
 
   // 2. Zod validation
   const parsed = CreateMenuSchema.safeParse(input);
   if (!parsed.success) {
-    const firstError =
-      parsed.error.issues[0]?.message ?? "Data menu tidak valid.";
+    const firstError = parsed.error.issues[0]?.message ?? 'Data menu tidak valid.';
     return { success: false, error: firstError };
   }
 
@@ -138,19 +129,19 @@ export async function createMenu(
       select: { id: true },
     });
 
-    revalidatePath("/admin/menus");
-    revalidatePath("/menu");
+    revalidatePath('/admin/menus');
+    revalidatePath('/menu');
 
     return { success: true, data: { menuId: menu.id } };
   } catch (error) {
-    console.error("[createMenu]", {
+    console.error('[createMenu]', {
       tenantId: tenant.tenantId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal menambahkan menu. Coba lagi ya.",
+      error: 'Gagal menambahkan menu. Coba lagi ya.',
     };
   }
 }
@@ -159,11 +150,11 @@ export async function createMenu(
 
 export async function uploadMenuPhoto(formData: FormData): Promise<UploadResult> {
   const tenant = await getAdminTenantId();
-  if ("error" in tenant) return { success: false, error: tenant.error };
+  if ('error' in tenant) return { success: false, error: tenant.error };
 
-  const file = formData.get("file");
+  const file = formData.get('file');
   if (!(file instanceof File)) {
-    return { success: false, error: "File foto tidak valid." };
+    return { success: false, error: 'File foto tidak valid.' };
   }
 
   // Secure upload validation (MIME, extension, size, dangerous file check)
@@ -175,9 +166,9 @@ export async function uploadMenuPhoto(formData: FormData): Promise<UploadResult>
   }
 
   try {
-    const extension = "webp";
+    const extension = 'webp';
     const fileName = `menu-${Date.now()}-${randomUUID()}.${extension}`;
-    const targetDir = path.join(process.cwd(), "public", "uploads", "menus");
+    const targetDir = path.join(process.cwd(), 'public', 'uploads', 'menus');
     const targetPath = path.join(targetDir, fileName);
 
     await mkdir(targetDir, { recursive: true });
@@ -191,33 +182,30 @@ export async function uploadMenuPhoto(formData: FormData): Promise<UploadResult>
       data: { photoUrl: `/uploads/menus/${fileName}` },
     };
   } catch (error) {
-    console.error("[uploadMenuPhoto]", {
+    console.error('[uploadMenuPhoto]', {
       tenantId: tenant.tenantId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
 
     return {
       success: false,
-      error: "Upload foto gagal. Coba ulang lagi ya.",
+      error: 'Upload foto gagal. Coba ulang lagi ya.',
     };
   }
 }
 
 // ── updateMenu ─────────────────────────────────────────────
 
-export async function updateMenu(
-  input: UpdateMenuInput
-): Promise<ActionResult> {
+export async function updateMenu(input: UpdateMenuInput): Promise<ActionResult> {
   // 1. Auth + tenant check
   const tenant = await getAdminTenantId();
-  if ("error" in tenant) return { success: false, error: tenant.error };
+  if ('error' in tenant) return { success: false, error: tenant.error };
 
   // 2. Zod validation
   const parsed = UpdateMenuSchema.safeParse(input);
   if (!parsed.success) {
-    const firstError =
-      parsed.error.issues[0]?.message ?? "Data menu tidak valid.";
+    const firstError = parsed.error.issues[0]?.message ?? 'Data menu tidak valid.';
     return { success: false, error: firstError };
   }
 
@@ -231,14 +219,13 @@ export async function updateMenu(
     });
 
     if (!existing) {
-      return { success: false, error: "Menu tidak ditemukan." };
+      return { success: false, error: 'Menu tidak ditemukan.' };
     }
 
     // 4. Build update data (only include provided fields)
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
-    if (description !== undefined)
-      updateData.description = description || null;
+    if (description !== undefined) updateData.description = description || null;
     if (price !== undefined) updateData.price = price;
     if (category !== undefined) updateData.category = category || null;
     if (photoUrl !== undefined) updateData.photo_url = photoUrl || null;
@@ -249,43 +236,36 @@ export async function updateMenu(
     });
 
     // 5. Delete old local photo if replaced by a different one
-    if (
-      photoUrl !== undefined &&
-      existing.photo_url !== photoUrl &&
-      isLocalUpload(existing.photo_url)
-    ) {
+    if (photoUrl !== undefined && existing.photo_url !== photoUrl && isLocalUpload(existing.photo_url)) {
       await deleteLocalFile(existing.photo_url!);
     }
 
-    revalidatePath("/admin/menus");
-    revalidatePath("/menu");
+    revalidatePath('/admin/menus');
+    revalidatePath('/menu');
 
     return { success: true, data: null };
   } catch (error) {
-    console.error("[updateMenu]", {
+    console.error('[updateMenu]', {
       tenantId: tenant.tenantId,
       menuId: parsed.data.menuId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return { success: false, error: "Gagal mengubah menu. Coba lagi ya." };
+    return { success: false, error: 'Gagal mengubah menu. Coba lagi ya.' };
   }
 }
 
 // ── deleteMenu ─────────────────────────────────────────────
 
-export async function deleteMenu(
-  input: DeleteMenuInput
-): Promise<ActionResult> {
+export async function deleteMenu(input: DeleteMenuInput): Promise<ActionResult> {
   // 1. Auth + tenant check
   const tenant = await getAdminTenantId();
-  if ("error" in tenant) return { success: false, error: tenant.error };
+  if ('error' in tenant) return { success: false, error: tenant.error };
 
   // 2. Zod validation
   const parsed = DeleteMenuSchema.safeParse(input);
   if (!parsed.success) {
-    const firstError =
-      parsed.error.issues[0]?.message ?? "Data tidak valid.";
+    const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid.';
     return { success: false, error: firstError };
   }
 
@@ -299,7 +279,7 @@ export async function deleteMenu(
     });
 
     if (!existing) {
-      return { success: false, error: "Menu tidak ditemukan." };
+      return { success: false, error: 'Menu tidak ditemukan.' };
     }
 
     // 4. Check for active orders referencing this menu
@@ -307,7 +287,7 @@ export async function deleteMenu(
       where: {
         menu_id: menuId,
         order: {
-          status: { in: ["PENDING", "PREPARING", "READY"] },
+          status: { in: ['PENDING', 'PREPARING', 'READY'] },
         },
       },
     });
@@ -315,8 +295,7 @@ export async function deleteMenu(
     if (activeOrderItems > 0) {
       return {
         success: false,
-        error:
-          "Menu ini masih ada di pesanan aktif. Nonaktifkan dulu ya, jangan dihapus.",
+        error: 'Menu ini masih ada di pesanan aktif. Nonaktifkan dulu ya, jangan dihapus.',
       };
     }
 
@@ -333,35 +312,32 @@ export async function deleteMenu(
       await deleteLocalFile(menuToDelete!.photo_url!);
     }
 
-    revalidatePath("/admin/menus");
-    revalidatePath("/menu");
+    revalidatePath('/admin/menus');
+    revalidatePath('/menu');
 
     return { success: true, data: null };
   } catch (error) {
-    console.error("[deleteMenu]", {
+    console.error('[deleteMenu]', {
       tenantId: tenant.tenantId,
       menuId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return { success: false, error: "Gagal menghapus menu. Coba lagi ya." };
+    return { success: false, error: 'Gagal menghapus menu. Coba lagi ya.' };
   }
 }
 
 // ── toggleMenuAvailability ─────────────────────────────────
 
-export async function toggleMenuAvailability(
-  input: ToggleMenuAvailabilityInput
-): Promise<ActionResult> {
+export async function toggleMenuAvailability(input: ToggleMenuAvailabilityInput): Promise<ActionResult> {
   // 1. Auth + tenant check
   const tenant = await getAdminTenantId();
-  if ("error" in tenant) return { success: false, error: tenant.error };
+  if ('error' in tenant) return { success: false, error: tenant.error };
 
   // 2. Zod validation
   const parsed = ToggleMenuAvailabilitySchema.safeParse(input);
   if (!parsed.success) {
-    const firstError =
-      parsed.error.issues[0]?.message ?? "Data tidak valid.";
+    const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid.';
     return { success: false, error: firstError };
   }
 
@@ -375,7 +351,7 @@ export async function toggleMenuAvailability(
     });
 
     if (!existing) {
-      return { success: false, error: "Menu tidak ditemukan." };
+      return { success: false, error: 'Menu tidak ditemukan.' };
     }
 
     await prisma.menu.update({
@@ -383,20 +359,20 @@ export async function toggleMenuAvailability(
       data: { is_available: isAvailable },
     });
 
-    revalidatePath("/admin/menus");
-    revalidatePath("/menu");
+    revalidatePath('/admin/menus');
+    revalidatePath('/menu');
 
     return { success: true, data: null };
   } catch (error) {
-    console.error("[toggleMenuAvailability]", {
+    console.error('[toggleMenuAvailability]', {
       tenantId: tenant.tenantId,
       menuId,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return {
       success: false,
-      error: "Gagal mengubah ketersediaan menu. Coba lagi ya.",
+      error: 'Gagal mengubah ketersediaan menu. Coba lagi ya.',
     };
   }
 }
@@ -409,7 +385,7 @@ const ORPHAN_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
 
 export async function cleanupOrphanedUploads(): Promise<ActionResult<{ deleted: number }>> {
   const tenant = await getAdminTenantId();
-  if ("error" in tenant) return { success: false, error: tenant.error };
+  if ('error' in tenant) return { success: false, error: tenant.error };
 
   try {
     // 1. Get all local photo URLs currently used by menus
@@ -422,9 +398,7 @@ export async function cleanupOrphanedUploads(): Promise<ActionResult<{ deleted: 
     });
 
     const usedFileNames = new Set(
-      usedMenus
-        .map((m) => m.photo_url?.replace("/uploads/menus/", "") ?? "")
-        .filter(Boolean),
+      usedMenus.map((m) => m.photo_url?.replace('/uploads/menus/', '') ?? '').filter(Boolean),
     );
 
     // 2. List all files on disk
@@ -456,10 +430,10 @@ export async function cleanupOrphanedUploads(): Promise<ActionResult<{ deleted: 
 
     return { success: true, data: { deleted } };
   } catch (error) {
-    console.error("[cleanupOrphanedUploads]", {
+    console.error('[cleanupOrphanedUploads]', {
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
-    return { success: false, error: "Cleanup gagal." };
+    return { success: false, error: 'Cleanup gagal.' };
   }
 }
