@@ -170,11 +170,9 @@ function MenuFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "Edit Menu" : "Tambah Menu Baru"}
-          </DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Menu" : "Tambah Menu Baru"}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? "Ubah detail menu di bawah ini."
@@ -192,9 +190,7 @@ function MenuFormDialog({
               id="menu-name"
               placeholder="Nasi Goreng Spesial"
               value={form.name}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, name: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               required
               maxLength={100}
             />
@@ -347,7 +343,8 @@ function MenuFormDialog({
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Format JPG/PNG/WEBP. File besar otomatis dikompres supaya tetap jernih.
+                Format JPG/PNG/WEBP. File besar otomatis dikompres supaya tetap
+                jernih.
               </p>
               {isUploadPending && (
                 <p className="text-xs text-muted-foreground">
@@ -463,7 +460,9 @@ function AdminMenuCard({
       });
       if (result.success) {
         playfulToast.success(
-          checked ? "Menu ditampilkan ke pembeli! 🟢" : "Menu disembunyikan. 🔴"
+          checked
+            ? "Menu ditampilkan ke pembeli! 🟢"
+            : "Menu disembunyikan. 🔴",
         );
       } else {
         playfulToast.error(result.error);

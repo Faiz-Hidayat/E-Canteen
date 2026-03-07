@@ -1,13 +1,13 @@
-import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { ActiveOrders } from "@/components/shared/ActiveOrders";
-import { OrderHistory } from "@/components/shared/OrderHistory";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { ActiveOrders } from '@/components/shared/ActiveOrders';
+import { OrderHistory } from '@/components/shared/OrderHistory';
+import { Button } from '@/components/ui/button';
 
 export const metadata = {
-  title: "Pesanan Kamu — E-Canteen",
-  description: "Lihat status pesanan dan riwayat transaksimu.",
+  title: 'Pesanan Kamu — Kantin 40',
+  description: 'Lihat status pesanan dan riwayat transaksimu.',
 };
 
 // ── Types shared with client components ────────────────────
@@ -36,7 +36,7 @@ export interface OrderData {
 
 // ── Active statuses ────────────────────────────────────────
 
-const ACTIVE_STATUSES = ["PENDING", "CONFIRMED", "PREPARING", "READY"] as const;
+const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'] as const;
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -51,12 +51,8 @@ export default async function OrdersPage() {
           alt=""
           className="h-16 w-16 opacity-60"
         />
-        <h2 className="text-lg font-extrabold text-gray-800">
-          Masuk dulu yuk! 👋
-        </h2>
-        <p className="max-w-xs text-sm text-muted-foreground">
-          Kamu perlu login untuk melihat pesananmu.
-        </p>
+        <h2 className="text-lg font-extrabold text-gray-800">Masuk dulu yuk! 👋</h2>
+        <p className="max-w-xs text-sm text-muted-foreground">Kamu perlu login untuk melihat pesananmu.</p>
         <Button asChild className="mt-2 rounded-full px-8">
           <Link href="/login">Masuk</Link>
         </Button>
@@ -75,7 +71,7 @@ export default async function OrdersPage() {
         },
       },
     },
-    orderBy: { created_at: "desc" },
+    orderBy: { created_at: 'desc' },
   });
 
   // Transform for client
@@ -100,12 +96,8 @@ export default async function OrdersPage() {
   }));
 
   // Split active vs history
-  const active = allOrders.filter((o) =>
-    (ACTIVE_STATUSES as readonly string[]).includes(o.status)
-  );
-  const history = allOrders.filter(
-    (o) => !(ACTIVE_STATUSES as readonly string[]).includes(o.status)
-  );
+  const active = allOrders.filter((o) => (ACTIVE_STATUSES as readonly string[]).includes(o.status));
+  const history = allOrders.filter((o) => !(ACTIVE_STATUSES as readonly string[]).includes(o.status));
 
   return (
     <div className="space-y-10">

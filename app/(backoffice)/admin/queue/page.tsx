@@ -30,12 +30,14 @@ export default async function AdminQueuePage() {
   if (!session?.user?.id) redirect("/login");
   if (!session.user.tenantId) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-4xl">🏪</p>
-        <h2 className="mt-3 text-lg font-semibold text-foreground">
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/40 bg-white/60 py-20 text-center backdrop-blur-sm">
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-100 to-orange-100 shadow-inner">
+          <span className="text-4xl">🏪</span>
+        </div>
+        <h2 className="mt-4 text-lg font-bold text-foreground">
           Belum Terhubung ke Stan
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 max-w-xs text-sm text-muted-foreground">
           Akun admin kamu belum terhubung ke stan. Hubungi Super Admin ya.
         </p>
       </div>
@@ -81,16 +83,37 @@ export default async function AdminQueuePage() {
     })),
   }));
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-foreground">Antrean Pesanan</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Kelola pesanan masuk untuk stan kamu hari ini.
-      </p>
+  const confirmedCount = queueOrders.filter((o) => o.status === "CONFIRMED").length;
+  const preparingCount = queueOrders.filter((o) => o.status === "PREPARING").length;
+  const readyCount = queueOrders.filter((o) => o.status === "READY").length;
 
-      <div className="mt-6">
-        <OrderQueueBoard orders={queueOrders} />
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-400 p-6 text-white shadow-lg shadow-orange-200/40">
+        <div className="absolute -right-6 -top-6 text-[80px] opacity-20">📋</div>
+        <h1 className="text-2xl font-bold">Antrean Pesanan</h1>
+        <p className="mt-1 text-sm text-white/80">
+          Kelola pesanan masuk untuk stan kamu hari ini
+        </p>
+        {/* Mini stats */}
+        <div className="mt-4 flex gap-3">
+          <div className="rounded-xl bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-lg font-bold">{confirmedCount}</span>
+            <span className="ml-1 text-xs text-white/80">Masuk</span>
+          </div>
+          <div className="rounded-xl bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-lg font-bold">{preparingCount}</span>
+            <span className="ml-1 text-xs text-white/80">Diproses</span>
+          </div>
+          <div className="rounded-xl bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-lg font-bold">{readyCount}</span>
+            <span className="ml-1 text-xs text-white/80">Siap</span>
+          </div>
+        </div>
       </div>
+
+      <OrderQueueBoard orders={queueOrders} />
     </div>
   );
 }

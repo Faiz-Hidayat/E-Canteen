@@ -1,16 +1,16 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth, signOut } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import { ProfileCard } from "@/components/shared/ProfileCard";
-import { TopUpForm } from "@/components/shared/TopUpForm";
-import { BalanceHistory } from "@/components/shared/BalanceHistory";
-import { LogOut } from "lucide-react";
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { auth, signOut } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { Button } from '@/components/ui/button';
+import { ProfileCard } from '@/components/shared/ProfileCard';
+import { TopUpForm } from '@/components/shared/TopUpForm';
+import { BalanceHistory } from '@/components/shared/BalanceHistory';
+import { LogOut } from 'lucide-react';
 
 export const metadata = {
-  title: "Profil — E-Canteen",
-  description: "Halaman profil dan saldo kamu.",
+  title: 'Profil — Kantin 40',
+  description: 'Halaman profil dan saldo kamu.',
 };
 
 export default async function ProfilePage() {
@@ -25,12 +25,8 @@ export default async function ProfilePage() {
           alt=""
           className="h-16 w-16 opacity-60"
         />
-        <h2 className="text-lg font-extrabold text-gray-800">
-          Masuk dulu yuk! 👋
-        </h2>
-        <p className="max-w-xs text-sm text-muted-foreground">
-          Kamu perlu login untuk melihat profilmu.
-        </p>
+        <h2 className="text-lg font-extrabold text-gray-800">Masuk dulu yuk! 👋</h2>
+        <p className="max-w-xs text-sm text-muted-foreground">Kamu perlu login untuk melihat profilmu.</p>
         <Button asChild className="mt-2 rounded-full px-8">
           <Link href="/login">Masuk</Link>
         </Button>
@@ -50,18 +46,13 @@ export default async function ProfilePage() {
   });
 
   if (!user) {
-    redirect("/login");
+    redirect('/login');
   }
 
   return (
     <div className="mx-auto max-w-md space-y-5">
       {/* Profile + Wallet Card */}
-      <ProfileCard
-        name={user.name}
-        email={user.email}
-        role={user.role}
-        balance={user.balance}
-      />
+      <ProfileCard name={user.name} email={user.email} role={user.role} balance={user.balance} />
 
       {/* Top-Up Form */}
       <TopUpForm />
@@ -72,14 +63,12 @@ export default async function ProfilePage() {
       {/* Logout */}
       <form
         action={async () => {
-          "use server";
-          await signOut({ redirectTo: "/login" });
-        }}
-      >
+          'use server';
+          await signOut({ redirectTo: '/login' });
+        }}>
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-6 py-3.5 text-sm font-extrabold text-red-600 transition-colors hover:bg-red-100"
-        >
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-6 py-3.5 text-sm font-extrabold text-red-600 transition-colors hover:bg-red-100">
           <LogOut className="h-4 w-4" />
           Keluar dari Akun
         </button>

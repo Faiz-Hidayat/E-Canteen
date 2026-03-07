@@ -1,13 +1,13 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { MenuHero } from "@/components/shared/MenuHero";
-import { WalletCard } from "@/components/shared/WalletCard";
-import { MenuCatalog } from "@/components/shared/MenuCatalog";
-import { AnimatedBlobs } from "@/components/shared/AnimatedBlobs";
+import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { MenuHero } from '@/components/shared/MenuHero';
+import { WalletCard } from '@/components/shared/WalletCard';
+import { MenuCatalog } from '@/components/shared/MenuCatalog';
+import { AnimatedBlobs } from '@/components/shared/AnimatedBlobs';
 
 export const metadata = {
-  title: "Menu Kantin — E-Canteen",
-  description: "Jelajahi menu kantin sekolah dan pesan makanan favoritmu.",
+  title: 'Menu Kantin — Kantin 40',
+  description: 'Jelajahi menu kantin sekolah dan pesan makanan favoritmu.',
 };
 
 export default async function MenuPage() {
@@ -19,7 +19,7 @@ export default async function MenuPage() {
     include: {
       tenant: { select: { id: true, name: true } },
     },
-    orderBy: { created_at: "desc" },
+    orderBy: { created_at: 'desc' },
   });
 
   // Get user balance if logged in

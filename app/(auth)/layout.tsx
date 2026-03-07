@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "E-Canteen — Masuk atau Daftar",
+  title: "Kantin 40 — Masuk atau Daftar",
 };
 
 export default function AuthLayout({
@@ -18,7 +18,7 @@ export default function AuthLayout({
             <span className="text-2xl">🍽️</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#333333]">
-            E-Canteen
+            Kantin 40
           </h1>
           <p className="mt-1 text-sm text-[#A3A3A3]">
             Pre-Order Kantin Sekolah

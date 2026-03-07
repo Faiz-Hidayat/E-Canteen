@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "E-Canteen — Pre-Order Kantin Sekolah",
+  title: "Kantin 40 — Pre-Order Kantin Sekolah",
   description:
     "Sistem pre-order makanan dan minuman kantin sekolah. Pesan dari kelas, ambil tanpa antre!",
 };

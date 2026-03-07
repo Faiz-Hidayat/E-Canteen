@@ -22,12 +22,14 @@ export default async function AdminMenusPage() {
   if (!session?.user?.id) redirect("/login");
   if (!session.user.tenantId) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-4xl">🏪</p>
-        <h2 className="mt-3 text-lg font-semibold text-foreground">
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/40 bg-white/60 py-20 text-center backdrop-blur-sm">
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-100 to-green-100 shadow-inner">
+          <span className="text-4xl">🏪</span>
+        </div>
+        <h2 className="mt-4 text-lg font-bold text-foreground">
           Belum Terhubung ke Stan
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 max-w-xs text-sm text-muted-foreground">
           Akun admin kamu belum terhubung ke stan. Hubungi Super Admin ya.
         </p>
       </div>
@@ -62,15 +64,27 @@ export default async function AdminMenusPage() {
   cleanupOrphanedUploads().catch(() => {});
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-foreground">Menu Saya</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Kelola menu makanan dan minuman stan kamu di sini.
-      </p>
-
-      <div className="mt-6">
-        <AdminMenuList menus={menuItems} />
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 p-6 text-white shadow-lg shadow-green-200/40">
+        <div className="absolute -right-6 -top-6 text-[80px] opacity-20">🍽️</div>
+        <h1 className="text-2xl font-bold">Menu Saya</h1>
+        <p className="mt-1 text-sm text-white/80">
+          Kelola menu makanan dan minuman stan kamu di sini
+        </p>
+        <div className="mt-3 flex gap-3">
+          <div className="rounded-xl bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-lg font-bold">{menuItems.length}</span>
+            <span className="ml-1 text-xs text-white/80">Total Menu</span>
+          </div>
+          <div className="rounded-xl bg-white/20 px-3 py-1.5 backdrop-blur-sm">
+            <span className="text-lg font-bold">{menuItems.filter(m => m.isAvailable).length}</span>
+            <span className="ml-1 text-xs text-white/80">Aktif</span>
+          </div>
+        </div>
       </div>
+
+      <AdminMenuList menus={menuItems} />
     </div>
   );
 }

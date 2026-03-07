@@ -39,7 +39,16 @@ export function LoginForm() {
 
     if (result.success) {
       playfulToast.success("Berhasil masuk! Selamat datang kembali 👋");
-      router.push("/");
+
+      // Redirect based on role
+      const role = result.role;
+      if (role === "SUPER_ADMIN") {
+        router.push("/super-admin");
+      } else if (role === "ADMIN") {
+        router.push("/admin/queue");
+      } else {
+        router.push("/menu");
+      }
       router.refresh();
     } else {
       playfulToast.error(result.error);

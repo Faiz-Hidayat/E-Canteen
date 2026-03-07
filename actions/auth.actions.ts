@@ -14,7 +14,7 @@ type RegisterResult =
   | { success: false; error: string };
 
 type LoginResult =
-  | { success: true }
+  | { success: true; role: string }
   | { success: false; error: string };
 
 // ── Register ───────────────────────────────────────────────
@@ -90,7 +90,13 @@ export async function loginUser(
       redirect: false,
     });
 
-    return { success: true };
+    // Fetch user role for client-side redirect
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { role: true },
+    });
+
+    return { success: true, role: user?.role ?? "USER" };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

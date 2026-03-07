@@ -105,7 +105,7 @@ function OrderCard({ order }: { order: QueueOrder }) {
         playfulToast.success(
           nextStatus === "COMPLETED"
             ? "Pesanan selesai! 🎉"
-            : `Status diubah ke ${getStatusLabel(nextStatus)}`
+            : `Status diubah ke ${getStatusLabel(nextStatus)}`,
         );
       } else {
         playfulToast.error(result.error);
@@ -150,9 +150,7 @@ function OrderCard({ order }: { order: QueueOrder }) {
       exit={{ opacity: 0, scale: 0.9, y: -10 }}
       transition={{ duration: 0.25 }}
     >
-      <Card
-        className={`overflow-hidden border-l-4 ${config.borderColor} p-0`}
-      >
+      <Card className={`overflow-hidden border-l-4 ${config.borderColor} p-0`}>
         {/* Header */}
         <div className={`flex items-center justify-between px-4 pt-3 pb-2`}>
           <div className="flex items-center gap-2">
@@ -171,7 +169,9 @@ function OrderCard({ order }: { order: QueueOrder }) {
             ) : (
               <Wallet className="size-3.5" />
             )}
-            <span>{order.paymentMethod === "MIDTRANS" ? "Midtrans" : "Saldo"}</span>
+            <span>
+              {order.paymentMethod === "MIDTRANS" ? "Midtrans" : "Saldo"}
+            </span>
           </div>
         </div>
 
@@ -251,23 +251,28 @@ function OrderCard({ order }: { order: QueueOrder }) {
       </Card>
 
       {/* Cancel Confirmation Dialog with Reason */}
-      <Dialog open={showCancelConfirm} onOpenChange={(open) => {
-        setShowCancelConfirm(open);
-        if (!open) setCancelReason("");
-      }}>
+      <Dialog
+        open={showCancelConfirm}
+        onOpenChange={(open) => {
+          setShowCancelConfirm(open);
+          if (!open) setCancelReason("");
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Batalkan Pesanan?</DialogTitle>
             <DialogDescription>
               Pesanan <strong>{order.userName}</strong> sebesar{" "}
-              <strong>{formatRupiah(order.totalAmount)}</strong> akan
-              dibatalkan dan saldo dikembalikan ke pembeli. Aksi ini tidak bisa
-              dibatalkan.
+              <strong>{formatRupiah(order.totalAmount)}</strong> akan dibatalkan
+              dan saldo dikembalikan ke pembeli. Aksi ini tidak bisa dibatalkan.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <label htmlFor="cancel-reason" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="cancel-reason"
+              className="text-sm font-medium text-foreground"
+            >
               Alasan Pembatalan <span className="text-red-500">*</span>
             </label>
             <Textarea
